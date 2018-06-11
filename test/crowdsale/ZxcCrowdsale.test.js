@@ -104,12 +104,12 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
 
     it('constructor should set correct bonusPresale', async () => {
       const actualBonusPresale = await crowdsale.bonusPresale.call();
-      assert.strictEqual(actualBonusPresale.toString(), bonusPresaleDivisor.toString());
+      assert.strictEqual(actualBonusPresale.toString(), bonusPresale.toString());
     });
 
     it('constructor should set correct bonusSale', async () => {
       const actualBonusSale = await crowdsale.bonusSale.call();
-      assert.strictEqual(actualBonusSale.toString(), bonusSaleDivisor.toString());
+      assert.strictEqual(actualBonusSale.toString(), bonusSale.toString());
     });
 
     it('constructor should set correct minimumWeiDeposit', async () => {

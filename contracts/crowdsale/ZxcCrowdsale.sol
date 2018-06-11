@@ -102,8 +102,6 @@ contract ZxcCrowdsale is Ownable {
   )
     public
   {
-    uint256 _bonusDividend = 100; // 100%
-
     require(_walletAddress != address(0));
     require(_tokenAddress != address(0));
     require(_tokenAddress != _walletAddress);
@@ -118,9 +116,9 @@ contract ZxcCrowdsale is Ownable {
     require(_bonusPresale > 0 && _bonusPresale <= 100);
     require(_bonusSale > 0 && _bonusSale <= 100);
     // 100% / _bonusPresale = bonusPresale -> bonus: tokenAmount / bonusPresale
-    bonusPresale = _bonusDividend.div(_bonusPresale);
+    bonusPresale = _bonusPresale;
     // 100% / _bonusSale = bonusSale -> bonus: tokenAmount / bonusSale
-    bonusSale = _bonusDividend.div(_bonusSale);
+    bonusSale = _bonusSale;
 
     require(_startTimePresale >= now);
     require(_startTimeSaleWithBonus > _startTimePresale);
@@ -261,10 +259,10 @@ contract ZxcCrowdsale is Ownable {
     uint256 bonus = 0;
 
     if (isPrivatePresale()) {
-      bonus = tokens.div(bonusPresale);
+      bonus = tokens.mul(bonusPresale).div(uint256(100)); // tokens *  bonus (%) / 100%
     }
     else if (isPublicSaleWithBonus()) {
-      bonus = tokens.div(bonusSale);
+      bonus = tokens.mul(bonusSale).div(uint256(100)); // tokens * bonus (%) / 100%
     }
     else if (isPublicSaleNoBonus()) {
       // No bonus
