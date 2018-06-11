@@ -495,7 +495,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
     });
 
     it('buyTokens should purchase tokens', async () => {
-      let weiAmount = ether(11.05);
+      let weiAmount = ether("3.333333333333333333");
       let expectedSoldTokens = weiAmount.mul(rate);
       let startWalletBalance = await web3.eth.getBalance(wallet);
 
