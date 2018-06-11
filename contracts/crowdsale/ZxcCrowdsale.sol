@@ -13,12 +13,12 @@ contract ZxcCrowdsale is Ownable {
   using SafeMath for uint256;
 
   /**
-   * Token being sold.
+   * @dev Token being sold.
    */
   Zxc public token;
 
   /**
-   * Start timestamps for the following stages (start dates are inclusive, end exclusive):
+   * @dev Start timestamps for the following stages (start dates are inclusive, end exclusive):
    * - Token pre-sale with 10% bonus: 2018/06/26 - 2018/07/04
    * - Token sale with 5% bonus: 2018/07/04 - 2018/07/05
    * - Token sale with 0% bonus: 2018/07/05 - 2018/07/18
@@ -31,32 +31,32 @@ contract ZxcCrowdsale is Ownable {
   uint256 public bonusSale;
 
   /**
-   * End timestamp to end the crowdsale.
+   * @dev End timestamp to end the crowdsale.
    */
   uint256 public endTime;
 
   /**
-   * Minimum required wei deposit.
+   * @dev Minimum required wei deposit.
    */
   uint256 public minimumWeiDeposit;
 
   /**
-   * Crowdsale cap in ZXC.
+   * @dev Crowdsale cap in ZXC.
    */
   uint256 public crowdSaleZxcCap;
 
   /**
-   * Amount of ZXC tokens sold.
+   * @dev Amount of ZXC tokens sold.
    */
   uint256 public zxcSold;
 
   /**
-   * Address where funds are collected.
+   * @dev Address where funds are collected.
    */
   address public wallet;
 
   /**
-   * How many token units buyer gets per wei.
+   * @dev How many token units buyer gets per wei.
    */
   uint256 public rate;
 
