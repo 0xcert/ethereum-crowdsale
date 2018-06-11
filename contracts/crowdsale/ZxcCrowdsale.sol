@@ -102,7 +102,6 @@ contract ZxcCrowdsale is Ownable {
   )
     public
   {
-    //uint256 _decimalsMul;
     uint256 _bonusDividend = 100; // 100%
 
     require(_walletAddress != address(0));
@@ -113,7 +112,6 @@ contract ZxcCrowdsale is Ownable {
 
     uint8 _tokenDecimals = token.decimals();
     require(_tokenDecimals == 18);  // Sanity check.
-    //_decimalsMul = 10 ** uint256(_tokenDecimals);
     wallet = _walletAddress;
 
     require(_bonusPresale > 0);
@@ -139,7 +137,6 @@ contract ZxcCrowdsale is Ownable {
     require(token.totalSupply() >= _crowdSaleZxcCap);
 
     crowdSaleZxcCap = _crowdSaleZxcCap;
-    //crowdSaleZxcCap = _crowdSaleZxcCap.mul(_decimalsMul);
     zxcSold = 0;
 
     require(_minimumWeiDeposit > 0);
