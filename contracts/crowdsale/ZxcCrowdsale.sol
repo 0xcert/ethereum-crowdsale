@@ -169,6 +169,7 @@ contract ZxcCrowdsale is Ownable {
     require(beneficiary != address(0));
     require(weiAmount >= minimumWeiDeposit);
 
+    //NOTE: this reverts if NOT in any of the sale time periods!
     uint256 tokens = getTokenAmount(weiAmount);
 
     require(zxcSold.add(tokens) <= crowdSaleZxcCap);
