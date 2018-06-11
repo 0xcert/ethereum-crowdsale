@@ -592,7 +592,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
       await token.approve(crowdsale.address, crowdSaleZxcCap, {from: tokenOwner});
       await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
 
-      let { logs } = await crowdsale.buyTokens(buyerOne, {from: buyerOne, value: weiAmount});
+      let { logs } = await crowdsale.sendTransaction({from: buyerOne, value: weiAmount});
       let actualBalance = await token.balanceOf(buyerOne);
       // Buyer should get correct number of tokens
       assert.equal(actualBalance.toString(), expectedSoldTokens.toString());
