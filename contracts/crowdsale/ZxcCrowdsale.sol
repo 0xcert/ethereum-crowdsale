@@ -89,17 +89,17 @@ contract ZxcCrowdsale is Ownable {
    * @param _minimumWeiDeposit Minimum required deposit in wei.
    */
   constructor(address _walletAddress,
-              address _tokenAddress,
-              uint256 _startTimePresale,  // 1529971200: date -d '2018-06-26 00:00:00 UTC' +%s
-              uint256 _startTimeSaleWithBonus, // 1530662400: date -d '2018-07-04 00:00:00 UTC' +%s
-              uint256 _startTimeSaleNoBonus,  //1530748800: date -d '2018-07-05 00:00:00 UTC' +%s
-              uint256 _endTime,  // 1531872000: date -d '2018-07-18 00:00:00 UTC' +%s
-              uint256 _rate,  // 10000: 1 ETH = 10,000 ZXC
-              uint256 _crowdSaleZxcCap, // 250M
-              uint256 _bonusPresale,  // 10 (%)
-              uint256 _bonusSale,  // 5 (%)
-              uint256 _minimumWeiDeposit  // 1 ether;
-             )
+    address _tokenAddress,
+    uint256 _startTimePresale,  // 1529971200: date -d '2018-06-26 00:00:00 UTC' +%s
+    uint256 _startTimeSaleWithBonus, // 1530662400: date -d '2018-07-04 00:00:00 UTC' +%s
+    uint256 _startTimeSaleNoBonus,  //1530748800: date -d '2018-07-05 00:00:00 UTC' +%s
+    uint256 _endTime,  // 1531872000: date -d '2018-07-18 00:00:00 UTC' +%s
+    uint256 _rate,  // 10000: 1 ETH = 10,000 ZXC
+    uint256 _crowdSaleZxcCap, // 250M
+    uint256 _bonusPresale,  // 10 (%)
+    uint256 _bonusSale,  // 5 (%)
+    uint256 _minimumWeiDeposit  // 1 ether;
+  )
     public
   {
     //uint256 _decimalsMul;
