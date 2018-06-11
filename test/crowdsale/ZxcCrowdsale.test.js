@@ -207,6 +207,20 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           minimumWeiDeposit));
     });
 
+    it('constructor should fail if bonusPresale > 100', async () => {
+      await assertRevert(ZxcCrowdsale.new(wallet,
+                                          token.address,
+                                          startTimePresale,
+                                          startTimeSaleWithBonus,
+                                          startTimeSaleNoBonus,
+                                          endTime,
+                                          rate,
+                                          crowdSaleZxcCap,
+                                          101,
+                                          bonusSale,
+                                          minimumWeiDeposit));
+    });
+
     it('constructor should fail if bonusSale == 0', async () => {
       await assertRevert(ZxcCrowdsale.new(wallet,
                                           token.address,
@@ -218,6 +232,20 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           crowdSaleZxcCap,
                                           bonusPresale,
                                           0,
+                                          minimumWeiDeposit));
+    });
+
+    it('constructor should fail if bonusSale > 100', async () => {
+      await assertRevert(ZxcCrowdsale.new(wallet,
+                                          token.address,
+                                          startTimePresale,
+                                          startTimeSaleWithBonus,
+                                          startTimeSaleNoBonus,
+                                          endTime,
+                                          rate,
+                                          crowdSaleZxcCap,
+                                          bonusPresale,
+                                          101,
                                           minimumWeiDeposit));
     });
 

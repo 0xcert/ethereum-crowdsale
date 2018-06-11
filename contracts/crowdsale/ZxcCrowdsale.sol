@@ -114,8 +114,9 @@ contract ZxcCrowdsale is Ownable {
     require(_tokenDecimals == 18);  // Sanity check.
     wallet = _walletAddress;
 
-    require(_bonusPresale > 0);
-    require(_bonusSale > 0);
+    // Bonus should be > 0% and <= 100%
+    require(_bonusPresale > 0 && _bonusPresale <= 100);
+    require(_bonusSale > 0 && _bonusSale <= 100);
     // 100% / _bonusPresale = bonusPresale -> bonus: tokenAmount / bonusPresale
     bonusPresale = _bonusDividend.div(_bonusPresale);
     // 100% / _bonusSale = bonusSale -> bonus: tokenAmount / bonusSale
