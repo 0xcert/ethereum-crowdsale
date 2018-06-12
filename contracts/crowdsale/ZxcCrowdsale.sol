@@ -13,7 +13,9 @@ import "@0xcert/ethereum-zxc/contracts/tokens/Zxc.sol";
  *   - Token sale with 5% bonus: 2018/07/04 - 2018/07/05
  *   - Token sale with 0% bonus: 2018/07/05 - 2018/07/18
  */
-contract ZxcCrowdsale is Ownable {
+contract ZxcCrowdsale is
+  Ownable
+{
   using SafeMath for uint256;
 
   /**
