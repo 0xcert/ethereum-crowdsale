@@ -8,6 +8,10 @@ import "@0xcert/ethereum-zxc/contracts/tokens/Zxc.sol";
 /**
  * @title ZXC crowdsale contract.
  * @dev Crowdsale contract for distributing ZXC tokens.
+ * Start timestamps for the token sale stages (start dates are inclusive, end exclusive):
+ *   - Token presale with 10% bonus: 2018/06/26 - 2018/07/04
+ *   - Token sale with 5% bonus: 2018/07/04 - 2018/07/05
+ *   - Token sale with 0% bonus: 2018/07/05 - 2018/07/18
  */
 contract ZxcCrowdsale is Ownable {
   using SafeMath for uint256;
@@ -18,16 +22,29 @@ contract ZxcCrowdsale is Ownable {
   Zxc public token;
 
   /**
-   * @dev Start timestamps for the following stages (start dates are inclusive, end exclusive):
-   * - Token pre-sale with 10% bonus: 2018/06/26 - 2018/07/04
-   * - Token sale with 5% bonus: 2018/07/04 - 2018/07/05
-   * - Token sale with 0% bonus: 2018/07/05 - 2018/07/18
+   * @dev Start time of the presale.
    */
   uint256 public startTimePresale;
+
+  /**
+   * @dev Start time of the token sale with bonus.
+   */
   uint256 public startTimeSaleWithBonus;
+
+  /**
+   * @dev Start time of the token sale with no bonus.
+   */
   uint256 public startTimeSaleNoBonus;
 
+  /**
+   * @dev Presale bonus expressed as percentage integer (10% = 10).
+   */
   uint256 public bonusPresale;
+
+
+  /**
+   * @dev Token sale bonus expressed as percentage integer (10% = 10).
+   */
   uint256 public bonusSale;
 
   /**
