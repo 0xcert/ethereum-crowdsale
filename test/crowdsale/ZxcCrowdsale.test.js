@@ -622,11 +622,25 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
       assert.strictEqual(actualTokens.toString(), expectedTokens.toString());
     });
 
-    it('buyTokens should purchase tokens if sold token amount hits crowdsale cap', async () => {
+    it('buyTokens should purchase tokens if sold token amount == crowdsale cap', async () => {
       let weiAmount = ether(3);
-      let crowdsaleCap = ether(3).mul(rate);
-      let expectedTokens = weiAmount.mul(rate);
+      let crowdsaleCap = weiAmount.mul(rate);
+      let expectedTokens = crowdsaleCap;
 
+      crowdsale = await ZxcCrowdsaleTestable.new(wallet,
+                                                 token.address,
+                                                 startTimePresale,
+                                                 startTimeSaleWithBonus,
+                                                 startTimeSaleNoBonus,
+                                                 endTime,
+                                                 rate,
+                                                 crowdsaleCap,
+                                                 crowdsaleCap,
+                                                 bonusPresale,
+                                                 bonusSale,
+                                                 minimumWeiDeposit,
+                                                 _tester,
+                                                 {from: crowdsaleOwner});
       // Set crowdsale contract ZXC allowance
       await token.approve(crowdsale.address, crowdsaleCap, {from: tokenOwner});
       await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
@@ -639,6 +653,21 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
     it('buyTokens should fail purchasing if sold token amount goes over crowdsale cap', async () => {
       let weiAmount = ether(3.1);
       let crowdsaleCap = ether(3).mul(rate);
+
+      crowdsale = await ZxcCrowdsaleTestable.new(wallet,
+                                                 token.address,
+                                                 startTimePresale,
+                                                 startTimeSaleWithBonus,
+                                                 startTimeSaleNoBonus,
+                                                 endTime,
+                                                 rate,
+                                                 crowdsaleCap,
+                                                 crowdsaleCap,
+                                                 bonusPresale,
+                                                 bonusSale,
+                                                 minimumWeiDeposit,
+                                                 _tester,
+                                                 {from: crowdsaleOwner});
 
       // Set crowdsale contract ZXC allowance
       await token.approve(crowdsale.address, crowdsaleCap, {from: tokenOwner});
