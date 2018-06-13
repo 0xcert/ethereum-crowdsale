@@ -141,9 +141,8 @@ contract ZxcCrowdsale is
     // Bonus should be > 0% and <= 100%
     require(_bonusPresale > 0 && _bonusPresale <= 100);
     require(_bonusSale > 0 && _bonusSale <= 100);
-    // 100% / _bonusPresale = bonusPresale -> bonus: tokenAmount / bonusPresale
+
     bonusPresale = _bonusPresale;
-    // 100% / _bonusSale = bonusSale -> bonus: tokenAmount / bonusSale
     bonusSale = _bonusSale;
 
     require(_startTimePresale >= now);
