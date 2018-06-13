@@ -642,18 +642,32 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
       await assertRevert(crowdsale.buyTokens(0, {from: buyerOne, value: weiAmount}));
     });
 
-    it('buyTokens should fail purchasing tokens if ether amount is less than minimum deposit', async () => {
+    it('buyTokens should fail purchasing tokens if less than min deposit in presale', async () => {
       let weiAmount = ether(0.03);
       // Set crowdsale contract ZXC allowance
       await token.approve(crowdsale.address, crowdSaleZxcSupply, {from: tokenOwner});
-      await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
+      await increaseTimeTo(startTimePresale + duration.seconds(30));
 
       await assertRevert(crowdsale.buyTokens(buyerOne, {from: buyerOne, value: weiAmount}));
     });
 
-    it('buyTokens should purchase tokens for minimum deposit amount', async () => {
+    it('buyTokens should purchase tokens for min deposit in presale', async () => {
       let weiAmount = ether(1);
       let expectedTokens = weiAmount.mul(rate);
+      const expectedBonus =  expectedTokens.div(bonusPresaleDivisor);
+
+      // Set crowdsale contract ZXC allowance
+      await token.approve(crowdsale.address, crowdSaleZxcSupply, {from: tokenOwner});
+      await increaseTimeTo(startTimePresale + duration.seconds(30));
+
+      await crowdsale.buyTokens(buyerOne, {from: buyerOne, value: weiAmount});
+      let actualTokens = await token.balanceOf(buyerOne);
+      assert.strictEqual(actualTokens.toString(), expectedTokens.add(expectedBonus).toString());
+    });
+
+    it('buyTokens should purchase tokens for less than presale min deposit in sale period', async () => {
+      const weiAmount = ether(0.01);
+      const expectedTokens = weiAmount.mul(rate);
 
       // Set crowdsale contract ZXC allowance
       await token.approve(crowdsale.address, crowdSaleZxcSupply, {from: tokenOwner});

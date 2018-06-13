@@ -55,7 +55,7 @@ contract ZxcCrowdsale is
   uint256 public endTime;
 
   /**
-   * @dev Minimum required wei deposit.
+   * @dev Minimum required wei deposit for public presale period.
    */
   uint256 public minimumWeiDeposit;
 
@@ -191,9 +191,9 @@ contract ZxcCrowdsale is
     uint256 weiAmount = msg.value;
     uint256 tokens;
     require(beneficiary != address(0));
-    require(weiAmount >= minimumWeiDeposit);
 
     if (isPrivatePresale()) {
+      require(weiAmount >= minimumWeiDeposit);
       tokens = getTokenAmount(weiAmount, bonusPresale);
       require(tokens <= preSaleZxcCap);
     }
