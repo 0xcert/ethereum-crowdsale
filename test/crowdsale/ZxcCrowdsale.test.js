@@ -9,6 +9,7 @@ const BigNumber = web3.BigNumber;
 const ZxcCrowdsale = artifacts.require('ZxcCrowdsale');
 const ZxcCrowdsaleTestable = artifacts.require('../mocks/ZxcCrowdsaleTestable.sol');
 const ZxcBigDecimals = artifacts.require('../mocks/ZxcBigDecimals.sol');
+const Xcert = artifacts.require('@0xcert/ethereum-xcert/contracts/tokens/Xcert.sol');
 const Zxc = artifacts.require('@0xcert/ethereum-zxc/contracts/tokens/Zxc.sol');
 
 
@@ -38,8 +39,10 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
   const buyerOne = accounts[4];
   const buyerTwo = accounts[5];
   const _tester = accounts[6];  // tester should never be the default account!
+  const xcertTokenOwner = accounts[7];
 
   let token;
+  let xcertToken;
   let crowdsale;
 
   before(async () => {
@@ -58,19 +61,21 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
 
     beforeEach(async () => {
       token = await Zxc.new({from: tokenOwner});
+      xcertToken = await Xcert.new({from: tokenOwner});
       crowdsale = await ZxcCrowdsale.new(wallet,
-                                        token.address,
-                                        startTimePresale,
-                                        startTimeSaleWithBonus,
-                                        startTimeSaleNoBonus,
-                                        endTime,
-                                        rate,
-                                        preSaleZxcCap,
-                                        crowdSaleZxcSupply,
-                                        bonusPresale,
-                                        bonusSale,
-                                        minimumWeiDeposit,
-                                        {from: crowdsaleOwner});
+                                         token.address,
+                                         xcertToken.address,
+                                         startTimePresale,
+                                         startTimeSaleWithBonus,
+                                         startTimeSaleNoBonus,
+                                         endTime,
+                                         rate,
+                                         preSaleZxcCap,
+                                         crowdSaleZxcSupply,
+                                         bonusPresale,
+                                         bonusSale,
+                                         minimumWeiDeposit,
+                                         {from: crowdsaleOwner});
     });
 
     it('time stages should be correct and in the right order', async () => {
@@ -133,6 +138,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
       const firstStageStartPast = latestTime() - duration.weeks(1);
       await assertRevert(ZxcCrowdsale.new(wallet,
                                           token.address,
+                                          xcertToken.address,
                                           firstStageStartPast,
                                           startTimeSaleWithBonus,
                                           startTimeSaleNoBonus,
@@ -147,6 +153,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
     it('constructor should fail with wallet address set to 0', async () => {
       await assertRevert(ZxcCrowdsale.new(0,
                                           token.address,
+                                          xcertToken.address,
                                           startTimePresale,
                                           startTimeSaleWithBonus,
                                           startTimeSaleNoBonus,
@@ -162,6 +169,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
     it('constructor should set correct wallet address', async () => {
       const _crowdsale = await ZxcCrowdsale.new(wallet,
                                                 token.address,
+                                                xcertToken.address,
                                                 startTimePresale,
                                                 startTimeSaleWithBonus,
                                                 startTimeSaleNoBonus,
@@ -175,9 +183,75 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
       assert.strictEqual(await _crowdsale.wallet.call(), wallet);
     });
 
+    it('constructor should set correct Xcert token address', async () => {
+      const _crowdsale = await ZxcCrowdsale.new(wallet,
+                                                token.address,
+                                                xcertToken.address,
+                                                startTimePresale,
+                                                startTimeSaleWithBonus,
+                                                startTimeSaleNoBonus,
+                                                endTime,
+                                                rate,
+                                                preSaleZxcCap,
+                                                crowdSaleZxcSupply,
+                                                bonusPresale,
+                                                bonusSale,
+                                                minimumWeiDeposit);
+      assert.strictEqual(await _crowdsale.xcertKyc.call(), xcertToken.address);
+    });
+
+    it('constructor should fail with Xcert token address set to 0', async () => {
+      await assertRevert(ZxcCrowdsale.new(wallet,
+                                          token.address,
+                                          0,
+                                          startTimePresale,
+                                          startTimeSaleWithBonus,
+                                          startTimeSaleNoBonus,
+                                          endTime,
+                                          rate,
+                                          preSaleZxcCap,
+                                          crowdSaleZxcSupply,
+                                          bonusPresale,
+                                          bonusSale,
+                                          minimumWeiDeposit));
+    });
+
     it('constructor should fail with token address set to 0', async () => {
       await assertRevert(ZxcCrowdsale.new(wallet,
                                           0,
+                                          xcertToken.address,
+                                          startTimePresale,
+                                          startTimeSaleWithBonus,
+                                          startTimeSaleNoBonus,
+                                          endTime,
+                                          rate,
+                                          preSaleZxcCap,
+                                          crowdSaleZxcSupply,
+                                          bonusPresale,
+                                          bonusSale,
+                                          minimumWeiDeposit));
+    });
+
+    it('constructor should fail if token address equals Xcert token address', async () => {
+      await assertRevert(ZxcCrowdsale.new(wallet,
+                                          token.address,
+                                          token.address,
+                                          startTimePresale,
+                                          startTimeSaleWithBonus,
+                                          startTimeSaleNoBonus,
+                                          endTime,
+                                          rate,
+                                          preSaleZxcCap,
+                                          crowdSaleZxcSupply,
+                                          bonusPresale,
+                                          bonusSale,
+                                          minimumWeiDeposit));
+    });
+
+    it('constructor should fail if wallet address equals Xcert token address', async () => {
+      await assertRevert(ZxcCrowdsale.new(wallet,
+                                          token.address,
+                                          wallet,
                                           startTimePresale,
                                           startTimeSaleWithBonus,
                                           startTimeSaleNoBonus,
@@ -193,6 +267,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
     it('constructor should fail if wallet address equals token address', async () => {
       await assertRevert(ZxcCrowdsale.new(token.address,
                                           token.address,
+                                          xcertToken.address,
                                           startTimePresale,
                                           startTimeSaleWithBonus,
                                           startTimeSaleNoBonus,
@@ -208,6 +283,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
     it('constructor should fail if bonusPresale == 0', async () => {
       await assertRevert(ZxcCrowdsale.new(wallet,
                                           token.address,
+                                          xcertToken.address,
                                           startTimePresale,
                                           startTimeSaleWithBonus,
                                           startTimeSaleNoBonus,
@@ -223,6 +299,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
     it('constructor should fail if bonusPresale > 100', async () => {
       await assertRevert(ZxcCrowdsale.new(wallet,
                                           token.address,
+                                          xcertToken.address,
                                           startTimePresale,
                                           startTimeSaleWithBonus,
                                           startTimeSaleNoBonus,
@@ -238,6 +315,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
     it('constructor should fail if bonusSale == 0', async () => {
       await assertRevert(ZxcCrowdsale.new(wallet,
                                           token.address,
+                                          xcertToken.address,
                                           startTimePresale,
                                           startTimeSaleWithBonus,
                                           startTimeSaleNoBonus,
@@ -253,6 +331,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
     it('constructor should fail if bonusSale > 100', async () => {
       await assertRevert(ZxcCrowdsale.new(wallet,
                                           token.address,
+                                          xcertToken.address,
                                           startTimePresale,
                                           startTimeSaleWithBonus,
                                           startTimeSaleNoBonus,
@@ -268,6 +347,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
     it('constructor should fail with rate set to zero', async () => {
       await assertRevert(ZxcCrowdsale.new(wallet,
                                           token.address,
+                                          xcertToken.address,
                                           startTimePresale,
                                           startTimeSaleWithBonus,
                                           startTimeSaleNoBonus,
@@ -284,6 +364,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
       let _token = await ZxcBigDecimals.new({from: tokenOwner});
       await assertRevert(ZxcCrowdsale.new(wallet,
                                           _token.address,
+                                          xcertToken.address,
                                           startTimePresale,
                                           startTimeSaleWithBonus,
                                           startTimeSaleNoBonus,
@@ -299,6 +380,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
     it('constructor should fail with zero presale token cap', async () => {
       await assertRevert(ZxcCrowdsale.new(wallet,
                                           token.address,
+                                          xcertToken.address,
                                           startTimePresale,
                                           startTimeSaleWithBonus,
                                           startTimeSaleNoBonus,
@@ -314,6 +396,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
     it('constructor should fail with presale token cap > crowdsale token supply', async () => {
       await assertRevert(ZxcCrowdsale.new(wallet,
                                           token.address,
+                                          xcertToken.address,
                                           startTimePresale,
                                           startTimeSaleWithBonus,
                                           startTimeSaleNoBonus,
@@ -329,6 +412,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
     it('constructor should fail with zero crowdsale token supply', async () => {
       await assertRevert(ZxcCrowdsale.new(wallet,
                                           token.address,
+                                          xcertToken.address,
                                           startTimePresale,
                                           startTimeSaleWithBonus,
                                           startTimeSaleNoBonus,
@@ -344,6 +428,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
     it('constructor should fail with too low minimumWeiDeposit', async () => {
       await assertRevert(ZxcCrowdsale.new(wallet,
                                           token.address,
+                                          xcertToken.address,
                                           startTimePresale,
                                           startTimeSaleWithBonus,
                                           startTimeSaleNoBonus,
@@ -366,8 +451,10 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
       endTime = latestTime() + duration.hours(12);
 
       token = await Zxc.new({from: tokenOwner});
+      xcertToken = await Xcert.new({from: tokenOwner});
       crowdsale = await ZxcCrowdsaleTestable.new(wallet,
                                                  token.address,
+                                                 xcertToken.address,
                                                  startTimePresale,
                                                  startTimeSaleWithBonus,
                                                  startTimeSaleNoBonus,
@@ -500,8 +587,10 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
       endTime = latestTime() + duration.hours(12);
 
       token = await Zxc.new({from: tokenOwner});
+      xcertToken = await Xcert.new({from: xcertTokenOwner});
       crowdsale = await ZxcCrowdsale.new(wallet,
                                          token.address,
+                                         xcertToken.address,
                                          startTimePresale,
                                          startTimeSaleWithBonus,
                                          startTimeSaleNoBonus,
@@ -513,6 +602,14 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                          bonusSale,
                                          minimumWeiDeposit,
                                          {from: crowdsaleOwner});
+      // Mint KYC token for buyerOne
+      await xcertToken.mint(buyerOne,
+                            123,
+                            "https://foobar.io",
+                            "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae",
+                            ["0xa65de9e6"],
+                            ["0xa65de9e6"],
+                            {from: xcertTokenOwner});
       // TODO(luka): this enables transfers for all. We need to enable it only for crowdsale
       // contract.
       await token.enableTransfer({from: tokenOwner});
@@ -548,6 +645,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
       const presaleCap = new BigNumber("10").mul(decimalsMul).mul(rate);
       crowdsale = await ZxcCrowdsale.new(wallet,
                                          token.address,
+                                         xcertToken.address,
                                          startTimePresale,
                                          startTimeSaleWithBonus,
                                          startTimeSaleNoBonus,
@@ -632,13 +730,15 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
       await assertRevert(crowdsale.buyTokens(0, {from: buyerOne, value: weiAmount}));
     });
 
-    it('buyTokens should fail purchasing tokens if beneficiary address is 0', async () => {
+    it('buyTokens should fail if beneficiary address is not the same as msg.sender', async () => {
       let weiAmount = ether(7.03);
       // Set crowdsale contract ZXC allowance
       await token.approve(crowdsale.address, crowdSaleZxcSupply, {from: tokenOwner});
       await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
 
-      await assertRevert(crowdsale.buyTokens(0, {from: buyerOne, value: weiAmount}));
+      // buyerOne has KYC, buyerTwo doesn't have it.
+      await assertRevert(crowdsale.buyTokens(buyerTwo, {from: buyerOne, value: weiAmount}));
+      await assertRevert(crowdsale.buyTokens(buyerOne, {from: buyerTwo, value: weiAmount}));
     });
 
     it('buyTokens should fail purchasing tokens if less than min deposit in presale', async () => {
@@ -684,6 +784,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
 
       crowdsale = await ZxcCrowdsale.new(wallet,
                                          token.address,
+                                         xcertToken.address,
                                          startTimePresale,
                                          startTimeSaleWithBonus,
                                          startTimeSaleNoBonus,
@@ -710,6 +811,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
 
       crowdsale = await ZxcCrowdsale.new(wallet,
                                          token.address,
+                                         xcertToken.address,
                                          startTimePresale,
                                          startTimeSaleWithBonus,
                                          startTimeSaleNoBonus,
@@ -736,6 +838,32 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
 
       // Crowdsale ZXC allowance not set, transferFrom fails
       await assertRevert(crowdsale.buyTokens(buyerOne, {from: buyerOne, value: weiAmount}));
+    });
+
+    it('buyTokens should fail if sender does not have Xcert KYC token', async () => {
+      const weiAmount = ether(2.1);
+
+      // Set crowdsale contract ZXC allowance
+      await token.approve(crowdsale.address, crowdSaleZxcSupply, {from: tokenOwner});
+      await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
+
+      // buyerOne has KYC token
+      await crowdsale.buyTokens(buyerOne, {from: buyerOne, value: weiAmount});
+      // buyerTwo doesn't have KYC token
+      await assertRevert(crowdsale.buyTokens(buyerTwo, {from: buyerTwo, value: weiAmount}));
+    });
+
+    it('fallback function should fail if sender does not have Xcert KYC token', async () => {
+      const weiAmount = ether(2.1);
+
+      // Set crowdsale contract ZXC allowance
+      await token.approve(crowdsale.address, crowdSaleZxcSupply, {from: tokenOwner});
+      await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
+
+      // buyerOne has KYC token
+      await crowdsale.sendTransaction({from: buyerOne, value: weiAmount});
+      // buyerTwo doesn't have KYC token
+      await assertRevert(crowdsale.sendTransaction({from: buyerTwo, value: weiAmount}));
     });
 
     it('fallback function should purchase tokens', async () => {

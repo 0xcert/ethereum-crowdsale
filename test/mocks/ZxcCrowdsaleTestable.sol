@@ -27,6 +27,7 @@ contract ZxcCrowdsaleTestable is ZxcCrowdsale {
 
   constructor(address _walletAddress,
               address _tokenAddress,
+              address _xcertKycAddress,
               uint256 _startTimePresale,
               uint256 _startTimeSaleWithBonus,
               uint256 _startTimeSaleNoBonus,
@@ -42,6 +43,7 @@ contract ZxcCrowdsaleTestable is ZxcCrowdsale {
     ZxcCrowdsale(
       _walletAddress,
       _tokenAddress,
+      _xcertKycAddress,
       _startTimePresale,
       _startTimeSaleWithBonus,
       _startTimeSaleNoBonus,

@@ -3,6 +3,7 @@ pragma solidity ^0.4.24;
 import "@0xcert/ethereum-utils/contracts/math/SafeMath.sol";
 import "@0xcert/ethereum-utils/contracts/ownership/Ownable.sol";
 import "@0xcert/ethereum-zxc/contracts/tokens/Zxc.sol";
+import "@0xcert/ethereum-xcert/contracts/tokens/Xcert.sol";
 
 
 /**
@@ -24,6 +25,11 @@ contract ZxcCrowdsale is
   Zxc public token;
 
   /**
+   * @dev Xcert KYC token.
+   */
+  Xcert public xcertKyc;
+
+  /**
    * @dev Start time of the presale.
    */
   uint256 public startTimePresale;
@@ -42,7 +48,6 @@ contract ZxcCrowdsale is
    * @dev Presale bonus expressed as percentage integer (10% = 10).
    */
   uint256 public bonusPresale;
-
 
   /**
    * @dev Token sale bonus expressed as percentage integer (10% = 10).
@@ -102,6 +107,7 @@ contract ZxcCrowdsale is
    * @dev Contract constructor.
    * @param _walletAddress Address of the wallet which collects funds.
    * @param _tokenAddress Address of the ZXC token contract.
+   * @param _xcertKycAddress Address of the Xcert KYC token contract.
    * @param _startTimePresale Start time of presale stage.
    * @param _startTimeSaleWithBonus Start time of public sale stage with bonus.
    * @param _startTimeSaleNoBonus Start time of public sale stage with no bonus.
@@ -115,6 +121,7 @@ contract ZxcCrowdsale is
    */
   constructor(address _walletAddress,
     address _tokenAddress,
+    address _xcertKycAddress,
     uint256 _startTimePresale,  // 1529971200: date -d '2018-06-26 00:00:00 UTC' +%s
     uint256 _startTimeSaleWithBonus, // 1530662400: date -d '2018-07-04 00:00:00 UTC' +%s
     uint256 _startTimeSaleNoBonus,  //1530748800: date -d '2018-07-05 00:00:00 UTC' +%s
@@ -130,9 +137,13 @@ contract ZxcCrowdsale is
   {
     require(_walletAddress != address(0));
     require(_tokenAddress != address(0));
+    require(_xcertKycAddress != address(0));
     require(_tokenAddress != _walletAddress);
+    require(_tokenAddress != _xcertKycAddress);
+    require(_xcertKycAddress != _walletAddress);
 
     token = Zxc(_tokenAddress);
+    xcertKyc = Xcert(_xcertKycAddress);
 
     uint8 _tokenDecimals = token.decimals();
     require(_tokenDecimals == 18);  // Sanity check.
@@ -188,9 +199,13 @@ contract ZxcCrowdsale is
     public
     payable
   {
+    // Sender can't buy tokens from one address and receive it to another.
+    require(beneficiary == msg.sender);
+    // Sender needs Xcert KYC token.
+    require(xcertKyc.balanceOf(beneficiary) > 0);
+
     uint256 weiAmount = msg.value;
     uint256 tokens;
-    require(beneficiary != address(0));
 
     if (isPrivatePresale()) {
       require(weiAmount >= minimumWeiDeposit);
