@@ -16,6 +16,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
   const decimalsMul = new BigNumber('1e+18');  // 10 ** 18
   const rate = new BigNumber(10000);  // 1 ETH = 10,000 ZXC
   const crowdSaleZxcSupply = new BigNumber(250000001).mul(decimalsMul);  // 250M + 1, 18 decimals
+  const preSaleZxcCap = crowdSaleZxcSupply.sub(55000000);  // 195M
   const minimumWeiDeposit = ether(1);
   let startTimePresale;
   let startTimeSaleWithBonus;
@@ -64,6 +65,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                         startTimeSaleNoBonus,
                                         endTime,
                                         rate,
+                                        preSaleZxcCap,
                                         crowdSaleZxcSupply,
                                         bonusPresale,
                                         bonusSale,
@@ -98,8 +100,13 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
     });
 
     it('constructor should set correct crowdSaleZxcSupply', async () => {
-      const actualCap = await crowdsale.crowdSaleZxcSupply.call();
-      assert.strictEqual(actualCap.toString(), crowdSaleZxcSupply.toString());
+      const actualSupply = await crowdsale.crowdSaleZxcSupply.call();
+      assert.strictEqual(actualSupply.toString(), crowdSaleZxcSupply.toString());
+    });
+
+    it('constructor should set correct preSaleZxcCap', async () => {
+      const actualCap = await crowdsale.preSaleZxcCap.call();
+      assert.strictEqual(actualCap.toString(), preSaleZxcCap.toString());
     });
 
     it('constructor should set correct bonusPresale', async () => {
@@ -131,6 +138,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           startTimeSaleNoBonus,
                                           endTime,
                                           rate,
+                                          preSaleZxcCap,
                                           crowdSaleZxcSupply,
                                           bonusPresale,
                                           bonusSale,
@@ -144,6 +152,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           startTimeSaleNoBonus,
                                           endTime,
                                           rate,
+                                          preSaleZxcCap,
                                           crowdSaleZxcSupply,
                                           bonusPresale,
                                           bonusSale,
@@ -158,6 +167,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                                 startTimeSaleNoBonus,
                                                 endTime,
                                                 rate,
+                                                preSaleZxcCap,
                                                 crowdSaleZxcSupply,
                                                 bonusPresale,
                                                 bonusSale,
@@ -173,6 +183,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           startTimeSaleNoBonus,
                                           endTime,
                                           rate,
+                                          preSaleZxcCap,
                                           crowdSaleZxcSupply,
                                           bonusPresale,
                                           bonusSale,
@@ -187,6 +198,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           startTimeSaleNoBonus,
                                           endTime,
                                           rate,
+                                          preSaleZxcCap,
                                           crowdSaleZxcSupply,
                                           bonusPresale,
                                           bonusSale,
@@ -201,6 +213,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           startTimeSaleNoBonus,
                                           endTime,
                                           rate,
+                                          preSaleZxcCap,
                                           crowdSaleZxcSupply,
                                           0,
                                           bonusSale,
@@ -215,6 +228,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           startTimeSaleNoBonus,
                                           endTime,
                                           rate,
+                                          preSaleZxcCap,
                                           crowdSaleZxcSupply,
                                           101,
                                           bonusSale,
@@ -229,6 +243,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           startTimeSaleNoBonus,
                                           endTime,
                                           rate,
+                                          preSaleZxcCap,
                                           crowdSaleZxcSupply,
                                           bonusPresale,
                                           0,
@@ -243,6 +258,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           startTimeSaleNoBonus,
                                           endTime,
                                           rate,
+                                          preSaleZxcCap,
                                           crowdSaleZxcSupply,
                                           bonusPresale,
                                           101,
@@ -257,6 +273,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           startTimeSaleNoBonus,
                                           endTime,
                                           0,
+                                          preSaleZxcCap,
                                           crowdSaleZxcSupply,
                                           bonusPresale,
                                           bonusSale,
@@ -272,13 +289,14 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           startTimeSaleNoBonus,
                                           endTime,
                                           rate,
+                                          preSaleZxcCap,
                                           crowdSaleZxcSupply,
                                           bonusPresale,
                                           bonusSale,
                                           minimumWeiDeposit));
     });
 
-    it('constructor should fail with zero crowdsale cap', async () => {
+    it('constructor should fail with zero presale token cap', async () => {
       await assertRevert(ZxcCrowdsale.new(wallet,
                                           token.address,
                                           startTimePresale,
@@ -286,6 +304,37 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           startTimeSaleNoBonus,
                                           endTime,
                                           rate,
+                                          0,
+                                          crowdSaleZxcSupply,
+                                          bonusPresale,
+                                          bonusSale,
+                                          minimumWeiDeposit));
+    });
+
+    it('constructor should fail with presale token cap > crowdsale token supply', async () => {
+      await assertRevert(ZxcCrowdsale.new(wallet,
+                                          token.address,
+                                          startTimePresale,
+                                          startTimeSaleWithBonus,
+                                          startTimeSaleNoBonus,
+                                          endTime,
+                                          rate,
+                                          crowdSaleZxcSupply.add(1),
+                                          crowdSaleZxcSupply,
+                                          bonusPresale,
+                                          bonusSale,
+                                          minimumWeiDeposit));
+    });
+
+    it('constructor should fail with zero crowdsale token supply', async () => {
+      await assertRevert(ZxcCrowdsale.new(wallet,
+                                          token.address,
+                                          startTimePresale,
+                                          startTimeSaleWithBonus,
+                                          startTimeSaleNoBonus,
+                                          endTime,
+                                          rate,
+                                          preSaleZxcCap,
                                           0,
                                           bonusPresale,
                                           bonusSale,
@@ -300,6 +349,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           startTimeSaleNoBonus,
                                           endTime,
                                           rate,
+                                          preSaleZxcCap,
                                           crowdSaleZxcSupply,
                                           bonusPresale,
                                           bonusSale,
@@ -323,6 +373,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                                  startTimeSaleNoBonus,
                                                  endTime,
                                                  rate,
+                                                 preSaleZxcCap,
                                                  crowdSaleZxcSupply,
                                                  bonusPresale,
                                                  bonusSale,
@@ -418,6 +469,27 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
       assert.strictEqual(actualTokens.div(decimalsMul).toString(), '56100');
     });
 
+    it('getTokenAmount should revert if preasale cap reached', async () => {
+      let weiAmount = ether(6);
+      let preSaleCap= weiAmount.mul(rate).sub(1);
+      crowdsale = await ZxcCrowdsaleTestable.new(wallet,
+                                                 token.address,
+                                                 startTimePresale,
+                                                 startTimeSaleWithBonus,
+                                                 startTimeSaleNoBonus,
+                                                 endTime,
+                                                 rate,
+                                                 preSaleCap,
+                                                 crowdSaleZxcSupply,
+                                                 bonusPresale,
+                                                 bonusSale,
+                                                 minimumWeiDeposit,
+                                                 _tester,
+                                                 {from: crowdsaleOwner});
+      await increaseTimeTo(startTimePresale + duration.seconds(30));
+      await assertRevert(crowdsale.getTokenAmountWrapper(weiAmount, {from: buyerOne}));
+    });
+
     it('getTokenAmount should return correct num of tokens if in public bonus stage', async () => {
       await increaseTimeTo(startTimeSaleWithBonus + duration.seconds(30));
       // 7.192012 ETH = 71920.12 ZXC
@@ -483,6 +555,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                                  startTimeSaleNoBonus,
                                                  endTime,
                                                  rate,
+                                                 preSaleZxcCap,
                                                  crowdSaleZxcSupply,
                                                  bonusPresale,
                                                  bonusSale,

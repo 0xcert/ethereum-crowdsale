@@ -60,6 +60,11 @@ contract ZxcCrowdsale is
   uint256 public minimumWeiDeposit;
 
   /**
+   * @dev Total amount of ZXC tokens offered for the presale.
+   */
+  uint256 public preSaleZxcCap;
+
+  /**
    * @dev Total supply of ZXC tokens for the sale.
    */
   uint256 public crowdSaleZxcSupply;
@@ -102,6 +107,7 @@ contract ZxcCrowdsale is
    * @param _startTimeSaleNoBonus Start time of public sale stage with no bonus.
    * @param _endTime Time when sale ends.
    * @param _rate ZXC/ETH exchange rate.
+   * @param _presaleZxcCap Maximum number of ZXC offered for the presale.
    * @param _crowdSaleZxcSupply Supply of ZXC tokens offered for the sale. Includes _presaleZxcCap.
    * @param _bonusPresale Bonus token percentage for presale.
    * @param _bonusSale Bonus token percentage for public sale stage with bonus.
@@ -114,6 +120,7 @@ contract ZxcCrowdsale is
     uint256 _startTimeSaleNoBonus,  //1530748800: date -d '2018-07-05 00:00:00 UTC' +%s
     uint256 _endTime,  // 1531872000: date -d '2018-07-18 00:00:00 UTC' +%s
     uint256 _rate,  // 10000: 1 ETH = 10,000 ZXC
+    uint256 _presaleZxcCap, // 195M
     uint256 _crowdSaleZxcSupply, // 250M
     uint256 _bonusPresale,  // 10 (%)
     uint256 _bonusSale,  // 5 (%)
@@ -154,6 +161,9 @@ contract ZxcCrowdsale is
     require(_crowdSaleZxcSupply > 0);
     require(token.totalSupply() >= _crowdSaleZxcSupply);
     crowdSaleZxcSupply = _crowdSaleZxcSupply;
+
+    require(_presaleZxcCap > 0 && _presaleZxcCap <= _crowdSaleZxcSupply);
+    preSaleZxcCap = _presaleZxcCap;
 
     zxcSold = 0;
 
@@ -279,6 +289,7 @@ contract ZxcCrowdsale is
 
     if (isPrivatePresale()) {
       bonus = tokens.mul(bonusPresale).div(uint256(100)); // tokens *  bonus (%) / 100%
+      require(tokens.add(bonus) <= preSaleZxcCap);
     }
     else if (isPublicSaleWithBonus()) {
       bonus = tokens.mul(bonusSale).div(uint256(100)); // tokens * bonus (%) / 100%
