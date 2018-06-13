@@ -570,10 +570,10 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
     });
 
     it('forwardFunds should send ether to wallet address', async () => {
-      let weiAmount = ether(1.2);
-      let initialBalance = await web3.eth.getBalance(wallet);
+      const weiAmount = ether(1.2);
+      const initialBalance = await web3.eth.getBalance(wallet);
       await crowdsale.forwardFundsWrapper({from: buyerOne, value: weiAmount});
-      let newBalance = await web3.eth.getBalance(wallet);
+      const newBalance = await web3.eth.getBalance(wallet);
       assert.strictEqual(newBalance.sub(initialBalance).toString(), ether(1.2).toString());
     });
   });
@@ -731,7 +731,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
     });
 
     it('buyTokens should fail if beneficiary address is not the same as msg.sender', async () => {
-      let weiAmount = ether(7.03);
+      const weiAmount = ether(7.03);
       // Set crowdsale contract ZXC allowance
       await token.approve(crowdsale.address, crowdSaleZxcSupply, {from: tokenOwner});
       await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
@@ -742,7 +742,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
     });
 
     it('buyTokens should fail purchasing tokens if less than min deposit in presale', async () => {
-      let weiAmount = ether(0.03);
+      const weiAmount = ether(0.03);
       // Set crowdsale contract ZXC allowance
       await token.approve(crowdsale.address, crowdSaleZxcSupply, {from: tokenOwner});
       await increaseTimeTo(startTimePresale + duration.seconds(30));
@@ -751,8 +751,8 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
     });
 
     it('buyTokens should purchase tokens for min deposit in presale', async () => {
-      let weiAmount = ether(1);
-      let expectedTokens = weiAmount.mul(rate);
+      const weiAmount = ether(1);
+      const expectedTokens = weiAmount.mul(rate);
       const expectedBonus =  expectedTokens.div(bonusPresaleDivisor);
 
       // Set crowdsale contract ZXC allowance
@@ -760,7 +760,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
       await increaseTimeTo(startTimePresale + duration.seconds(30));
 
       await crowdsale.buyTokens(buyerOne, {from: buyerOne, value: weiAmount});
-      let actualTokens = await token.balanceOf(buyerOne);
+      const actualTokens = await token.balanceOf(buyerOne);
       assert.strictEqual(actualTokens.toString(), expectedTokens.add(expectedBonus).toString());
     });
 
@@ -773,14 +773,14 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
       await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
 
       await crowdsale.buyTokens(buyerOne, {from: buyerOne, value: weiAmount});
-      let actualTokens = await token.balanceOf(buyerOne);
+      const actualTokens = await token.balanceOf(buyerOne);
       assert.strictEqual(actualTokens.toString(), expectedTokens.toString());
     });
 
     it('buyTokens should purchase tokens if sold token amount == crowdsale cap', async () => {
-      let weiAmount = ether(3);
-      let crowdsaleCap = weiAmount.mul(rate);
-      let expectedTokens = crowdsaleCap;
+      const weiAmount = ether(3);
+      const crowdsaleCap = weiAmount.mul(rate);
+      const expectedTokens = crowdsaleCap;
 
       crowdsale = await ZxcCrowdsale.new(wallet,
                                          token.address,
@@ -801,13 +801,13 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
       await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
 
       await crowdsale.buyTokens(buyerOne, {from: buyerOne, value: weiAmount});
-      let actualTokens = await token.balanceOf(buyerOne);
+      const actualTokens = await token.balanceOf(buyerOne);
       assert.strictEqual(actualTokens.toString(), expectedTokens.toString());
     });
 
     it('buyTokens should fail purchasing if sold token amount goes over crowdsale cap', async () => {
-      let weiAmount = ether(3.1);
-      let crowdsaleCap = ether(3).mul(rate);
+      const weiAmount = ether(3.1);
+      const crowdsaleCap = ether(3).mul(rate);
 
       crowdsale = await ZxcCrowdsale.new(wallet,
                                          token.address,
@@ -832,7 +832,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
     });
 
     it('buyTokens should fail purchasing tokens if transferFrom fails', async () => {
-      let weiAmount = ether(2.1);
+      const weiAmount = ether(2.1);
 
       await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
 
@@ -867,26 +867,26 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
     });
 
     it('fallback function should purchase tokens', async () => {
-      let weiAmount = ether(8.05113);
-      let expectedSoldTokens = weiAmount.mul(rate);
-      let startWalletBalance = await web3.eth.getBalance(wallet);
+      const weiAmount = ether(8.05113);
+      const expectedSoldTokens = weiAmount.mul(rate);
+      const startWalletBalance = await web3.eth.getBalance(wallet);
 
       // Set crowdsale contract ZXC allowance
       await token.approve(crowdsale.address, crowdSaleZxcSupply, {from: tokenOwner});
       await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
 
-      let { logs } = await crowdsale.sendTransaction({from: buyerOne, value: weiAmount});
-      let actualBalance = await token.balanceOf(buyerOne);
+      const { logs } = await crowdsale.sendTransaction({from: buyerOne, value: weiAmount});
+      const actualBalance = await token.balanceOf(buyerOne);
       // Buyer should get correct number of tokens
       assert.equal(actualBalance.toString(), expectedSoldTokens.toString());
       // Wallet should receive correct amount of wei
-      let endWalletBalance = await web3.eth.getBalance(wallet);
+      const endWalletBalance = await web3.eth.getBalance(wallet);
       assert.strictEqual(endWalletBalance.sub(startWalletBalance).toString(), weiAmount.toString());
       // Counter for sold ZXC should be increased
-      let zxcSold = await crowdsale.zxcSold.call()
+      const zxcSold = await crowdsale.zxcSold.call()
       assert.strictEqual(zxcSold.toString(), expectedSoldTokens.toString());
 
-      let event = logs.find(e => e.event === 'TokenPurchase');
+      const event = logs.find(e => e.event === 'TokenPurchase');
       assert.notEqual(event, undefined);
     });
 
