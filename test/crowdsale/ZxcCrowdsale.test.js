@@ -15,7 +15,7 @@ const Zxc = artifacts.require('@0xcert/ethereum-zxc/contracts/tokens/Zxc.sol');
 contract('crowdsale/ZxcCrowdsale', (accounts) => {
   const decimalsMul = new BigNumber('1e+18');  // 10 ** 18
   const rate = new BigNumber(10000);  // 1 ETH = 10,000 ZXC
-  const crowdSaleZxcCap = new BigNumber(250000001).mul(decimalsMul);  // 250M + 1, 18 decimals
+  const crowdSaleZxcSupply = new BigNumber(250000001).mul(decimalsMul);  // 250M + 1, 18 decimals
   const minimumWeiDeposit = ether(1);
   let startTimePresale;
   let startTimeSaleWithBonus;
@@ -64,7 +64,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                         startTimeSaleNoBonus,
                                         endTime,
                                         rate,
-                                        crowdSaleZxcCap,
+                                        crowdSaleZxcSupply,
                                         bonusPresale,
                                         bonusSale,
                                         minimumWeiDeposit,
@@ -97,9 +97,9 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
       assert.strictEqual(actualRate.toString(), rate.toString());
     });
 
-    it('constructor should set correct crowdSaleZxcCap', async () => {
-      const actualCap = await crowdsale.crowdSaleZxcCap.call();
-      assert.strictEqual(actualCap.toString(), crowdSaleZxcCap.toString());
+    it('constructor should set correct crowdSaleZxcSupply', async () => {
+      const actualCap = await crowdsale.crowdSaleZxcSupply.call();
+      assert.strictEqual(actualCap.toString(), crowdSaleZxcSupply.toString());
     });
 
     it('constructor should set correct bonusPresale', async () => {
@@ -131,7 +131,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           startTimeSaleNoBonus,
                                           endTime,
                                           rate,
-                                          crowdSaleZxcCap,
+                                          crowdSaleZxcSupply,
                                           bonusPresale,
                                           bonusSale,
                                           minimumWeiDeposit));
@@ -144,7 +144,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           startTimeSaleNoBonus,
                                           endTime,
                                           rate,
-                                          crowdSaleZxcCap,
+                                          crowdSaleZxcSupply,
                                           bonusPresale,
                                           bonusSale,
                                           minimumWeiDeposit));
@@ -158,7 +158,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                                 startTimeSaleNoBonus,
                                                 endTime,
                                                 rate,
-                                                crowdSaleZxcCap,
+                                                crowdSaleZxcSupply,
                                                 bonusPresale,
                                                 bonusSale,
                                                 minimumWeiDeposit);
@@ -173,7 +173,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           startTimeSaleNoBonus,
                                           endTime,
                                           rate,
-                                          crowdSaleZxcCap,
+                                          crowdSaleZxcSupply,
                                           bonusPresale,
                                           bonusSale,
                                           minimumWeiDeposit));
@@ -187,7 +187,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           startTimeSaleNoBonus,
                                           endTime,
                                           rate,
-                                          crowdSaleZxcCap,
+                                          crowdSaleZxcSupply,
                                           bonusPresale,
                                           bonusSale,
                                           minimumWeiDeposit));
@@ -201,7 +201,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           startTimeSaleNoBonus,
                                           endTime,
                                           rate,
-                                          crowdSaleZxcCap,
+                                          crowdSaleZxcSupply,
                                           0,
                                           bonusSale,
                                           minimumWeiDeposit));
@@ -215,7 +215,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           startTimeSaleNoBonus,
                                           endTime,
                                           rate,
-                                          crowdSaleZxcCap,
+                                          crowdSaleZxcSupply,
                                           101,
                                           bonusSale,
                                           minimumWeiDeposit));
@@ -229,7 +229,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           startTimeSaleNoBonus,
                                           endTime,
                                           rate,
-                                          crowdSaleZxcCap,
+                                          crowdSaleZxcSupply,
                                           bonusPresale,
                                           0,
                                           minimumWeiDeposit));
@@ -243,7 +243,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           startTimeSaleNoBonus,
                                           endTime,
                                           rate,
-                                          crowdSaleZxcCap,
+                                          crowdSaleZxcSupply,
                                           bonusPresale,
                                           101,
                                           minimumWeiDeposit));
@@ -257,7 +257,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           startTimeSaleNoBonus,
                                           endTime,
                                           0,
-                                          crowdSaleZxcCap,
+                                          crowdSaleZxcSupply,
                                           bonusPresale,
                                           bonusSale,
                                           minimumWeiDeposit));
@@ -272,7 +272,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           startTimeSaleNoBonus,
                                           endTime,
                                           rate,
-                                          crowdSaleZxcCap,
+                                          crowdSaleZxcSupply,
                                           bonusPresale,
                                           bonusSale,
                                           minimumWeiDeposit));
@@ -300,7 +300,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           startTimeSaleNoBonus,
                                           endTime,
                                           rate,
-                                          crowdSaleZxcCap,
+                                          crowdSaleZxcSupply,
                                           bonusPresale,
                                           bonusSale,
                                           0));
@@ -323,7 +323,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                                  startTimeSaleNoBonus,
                                                  endTime,
                                                  rate,
-                                                 crowdSaleZxcCap,
+                                                 crowdSaleZxcSupply,
                                                  bonusPresale,
                                                  bonusSale,
                                                  minimumWeiDeposit,
@@ -357,13 +357,13 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
 
     it('hasEnded should return true if crowdsale reached the cap, end time not reached', async () => {
       await increaseTimeTo(startTimePresale + duration.seconds(30));
-      crowdsale._testSetZxcSold(crowdSaleZxcCap, {from: _tester})
+      crowdsale._testSetZxcSold(crowdSaleZxcSupply, {from: _tester})
       assert.strictEqual(await crowdsale.hasEnded(), true);
     });
 
     it('hasEnded should return true if crowdsale reached the cap and end time', async () => {
       await increaseTimeTo(endTime + duration.seconds(30));
-      crowdsale._testSetZxcSold(crowdSaleZxcCap, {from: _tester})
+      crowdsale._testSetZxcSold(crowdSaleZxcSupply, {from: _tester})
       assert.strictEqual(await crowdsale.hasEnded(), true);
     });
 
@@ -483,7 +483,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                                  startTimeSaleNoBonus,
                                                  endTime,
                                                  rate,
-                                                 crowdSaleZxcCap,
+                                                 crowdSaleZxcSupply,
                                                  bonusPresale,
                                                  bonusSale,
                                                  minimumWeiDeposit,
@@ -500,7 +500,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
       let startWalletBalance = await web3.eth.getBalance(wallet);
 
       // Set crowdsale contract ZXC allowance
-      await token.approve(crowdsale.address, crowdSaleZxcCap, {from: tokenOwner});
+      await token.approve(crowdsale.address, crowdSaleZxcSupply, {from: tokenOwner});
       await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
 
       let { logs } = await crowdsale.buyTokens(buyerOne, {from: buyerOne, value: weiAmount});
@@ -521,7 +521,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
     it('buyTokens should fail purchasing tokens if beneficiary address is 0', async () => {
       let weiAmount = ether(7.03);
       // Set crowdsale contract ZXC allowance
-      await token.approve(crowdsale.address, crowdSaleZxcCap, {from: tokenOwner});
+      await token.approve(crowdsale.address, crowdSaleZxcSupply, {from: tokenOwner});
       await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
 
       await assertRevert(crowdsale.buyTokens(0, {from: buyerOne, value: weiAmount}));
@@ -530,7 +530,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
     it('buyTokens should fail purchasing tokens if ether amount is less than minimum deposit', async () => {
       let weiAmount = ether(0.03);
       // Set crowdsale contract ZXC allowance
-      await token.approve(crowdsale.address, crowdSaleZxcCap, {from: tokenOwner});
+      await token.approve(crowdsale.address, crowdSaleZxcSupply, {from: tokenOwner});
       await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
 
       await assertRevert(crowdsale.buyTokens(buyerOne, {from: buyerOne, value: weiAmount}));
@@ -541,7 +541,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
       let expectedTokens = weiAmount.mul(rate);
 
       // Set crowdsale contract ZXC allowance
-      await token.approve(crowdsale.address, crowdSaleZxcCap, {from: tokenOwner});
+      await token.approve(crowdsale.address, crowdSaleZxcSupply, {from: tokenOwner});
       await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
 
       await crowdsale.buyTokens(buyerOne, {from: buyerOne, value: weiAmount});
@@ -589,7 +589,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
       let startWalletBalance = await web3.eth.getBalance(wallet);
 
       // Set crowdsale contract ZXC allowance
-      await token.approve(crowdsale.address, crowdSaleZxcCap, {from: tokenOwner});
+      await token.approve(crowdsale.address, crowdSaleZxcSupply, {from: tokenOwner});
       await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
 
       let { logs } = await crowdsale.sendTransaction({from: buyerOne, value: weiAmount});

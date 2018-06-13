@@ -32,7 +32,7 @@ contract ZxcCrowdsaleTestable is ZxcCrowdsale {
               uint256 _startTimeSaleNoBonus,
               uint256 _endTime,
               uint256 _rate,
-              uint256 _crowdSaleZxcCap,
+              uint256 _crowdSaleZxcSupply,
               uint256 _bonusPresale,
               uint256 _bonusSale,
               uint256 _minimumWeiDeposit,
@@ -46,7 +46,7 @@ contract ZxcCrowdsaleTestable is ZxcCrowdsale {
       _startTimeSaleNoBonus,
       _endTime,
       _rate,
-      _crowdSaleZxcCap,
+      _crowdSaleZxcSupply,
       _bonusPresale,
       _bonusSale,
       _minimumWeiDeposit

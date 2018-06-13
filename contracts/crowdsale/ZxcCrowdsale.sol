@@ -60,9 +60,9 @@ contract ZxcCrowdsale is
   uint256 public minimumWeiDeposit;
 
   /**
-   * @dev Crowdsale cap in ZXC.
+   * @dev Total supply of ZXC tokens for the sale.
    */
-  uint256 public crowdSaleZxcCap;
+  uint256 public crowdSaleZxcSupply;
 
   /**
    * @dev Amount of ZXC tokens sold.
@@ -102,7 +102,7 @@ contract ZxcCrowdsale is
    * @param _startTimeSaleNoBonus Start time of public sale stage with no bonus.
    * @param _endTime Time when sale ends.
    * @param _rate ZXC/ETH exchange rate.
-   * @param _crowdSaleZxcCap Number of ZXC tokens offered during the sale.
+   * @param _crowdSaleZxcSupply Supply of ZXC tokens offered for the sale. Includes _presaleZxcCap.
    * @param _bonusPresale Bonus token percentage for presale.
    * @param _bonusSale Bonus token percentage for public sale stage with bonus.
    * @param _minimumWeiDeposit Minimum required deposit in wei.
@@ -114,7 +114,7 @@ contract ZxcCrowdsale is
     uint256 _startTimeSaleNoBonus,  //1530748800: date -d '2018-07-05 00:00:00 UTC' +%s
     uint256 _endTime,  // 1531872000: date -d '2018-07-18 00:00:00 UTC' +%s
     uint256 _rate,  // 10000: 1 ETH = 10,000 ZXC
-    uint256 _crowdSaleZxcCap, // 250M
+    uint256 _crowdSaleZxcSupply, // 250M
     uint256 _bonusPresale,  // 10 (%)
     uint256 _bonusSale,  // 5 (%)
     uint256 _minimumWeiDeposit  // 1 ether;
@@ -151,10 +151,10 @@ contract ZxcCrowdsale is
     require(_rate > 0);
     rate = _rate;
 
-    require(_crowdSaleZxcCap > 0);
-    require(token.totalSupply() >= _crowdSaleZxcCap);
+    require(_crowdSaleZxcSupply > 0);
+    require(token.totalSupply() >= _crowdSaleZxcSupply);
+    crowdSaleZxcSupply = _crowdSaleZxcSupply;
 
-    crowdSaleZxcCap = _crowdSaleZxcCap;
     zxcSold = 0;
 
     require(_minimumWeiDeposit > 0);
@@ -187,7 +187,7 @@ contract ZxcCrowdsale is
     //NOTE: this reverts if NOT in any of the sale time periods!
     uint256 tokens = getTokenAmount(weiAmount);
 
-    require(zxcSold.add(tokens) <= crowdSaleZxcCap);
+    require(zxcSold.add(tokens) <= crowdSaleZxcSupply);
     zxcSold = zxcSold.add(tokens);
 
     forwardFunds();
@@ -203,7 +203,7 @@ contract ZxcCrowdsale is
     view
     returns (bool)
   {
-    bool capReached = zxcSold >= crowdSaleZxcCap;
+    bool capReached = zxcSold >= crowdSaleZxcSupply;
     bool endTimeReached = now >= endTime;
     return capReached || endTimeReached;
   }
