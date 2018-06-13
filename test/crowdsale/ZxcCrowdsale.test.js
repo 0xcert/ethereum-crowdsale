@@ -500,20 +500,19 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
       endTime = latestTime() + duration.hours(12);
 
       token = await Zxc.new({from: tokenOwner});
-      crowdsale = await ZxcCrowdsaleTestable.new(wallet,
-                                                 token.address,
-                                                 startTimePresale,
-                                                 startTimeSaleWithBonus,
-                                                 startTimeSaleNoBonus,
-                                                 endTime,
-                                                 rate,
-                                                 preSaleZxcCap,
-                                                 crowdSaleZxcSupply,
-                                                 bonusPresale,
-                                                 bonusSale,
-                                                 minimumWeiDeposit,
-                                                 _tester,
-                                                 {from: crowdsaleOwner});
+      crowdsale = await ZxcCrowdsale.new(wallet,
+                                         token.address,
+                                         startTimePresale,
+                                         startTimeSaleWithBonus,
+                                         startTimeSaleNoBonus,
+                                         endTime,
+                                         rate,
+                                         preSaleZxcCap,
+                                         crowdSaleZxcSupply,
+                                         bonusPresale,
+                                         bonusSale,
+                                         minimumWeiDeposit,
+                                         {from: crowdsaleOwner});
       // TODO(luka): this enables transfers for all. We need to enable it only for crowdsale
       // contract.
       await token.enableTransfer({from: tokenOwner});
@@ -683,20 +682,19 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
       let crowdsaleCap = weiAmount.mul(rate);
       let expectedTokens = crowdsaleCap;
 
-      crowdsale = await ZxcCrowdsaleTestable.new(wallet,
-                                                 token.address,
-                                                 startTimePresale,
-                                                 startTimeSaleWithBonus,
-                                                 startTimeSaleNoBonus,
-                                                 endTime,
-                                                 rate,
-                                                 crowdsaleCap,
-                                                 crowdsaleCap,
-                                                 bonusPresale,
-                                                 bonusSale,
-                                                 minimumWeiDeposit,
-                                                 _tester,
-                                                 {from: crowdsaleOwner});
+      crowdsale = await ZxcCrowdsale.new(wallet,
+                                         token.address,
+                                         startTimePresale,
+                                         startTimeSaleWithBonus,
+                                         startTimeSaleNoBonus,
+                                         endTime,
+                                         rate,
+                                         crowdsaleCap,
+                                         crowdsaleCap,
+                                         bonusPresale,
+                                         bonusSale,
+                                         minimumWeiDeposit,
+                                         {from: crowdsaleOwner});
       // Set crowdsale contract ZXC allowance
       await token.approve(crowdsale.address, crowdsaleCap, {from: tokenOwner});
       await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
@@ -710,20 +708,19 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
       let weiAmount = ether(3.1);
       let crowdsaleCap = ether(3).mul(rate);
 
-      crowdsale = await ZxcCrowdsaleTestable.new(wallet,
-                                                 token.address,
-                                                 startTimePresale,
-                                                 startTimeSaleWithBonus,
-                                                 startTimeSaleNoBonus,
-                                                 endTime,
-                                                 rate,
-                                                 crowdsaleCap,
-                                                 crowdsaleCap,
-                                                 bonusPresale,
-                                                 bonusSale,
-                                                 minimumWeiDeposit,
-                                                 _tester,
-                                                 {from: crowdsaleOwner});
+      crowdsale = await ZxcCrowdsale.new(wallet,
+                                         token.address,
+                                         startTimePresale,
+                                         startTimeSaleWithBonus,
+                                         startTimeSaleNoBonus,
+                                         endTime,
+                                         rate,
+                                         crowdsaleCap,
+                                         crowdsaleCap,
+                                         bonusPresale,
+                                         bonusSale,
+                                         minimumWeiDeposit,
+                                         {from: crowdsaleOwner});
 
       // Set crowdsale contract ZXC allowance
       await token.approve(crowdsale.address, crowdsaleCap, {from: tokenOwner});
