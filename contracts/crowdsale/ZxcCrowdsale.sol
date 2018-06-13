@@ -199,7 +199,7 @@ contract ZxcCrowdsale is
     public
     payable
   {
-    // Sender can't buy tokens from one address and receive it to another.
+    // Sender can't buy tokens from one address and receive them to another.
     require(beneficiary == msg.sender);
     // Sender needs Xcert KYC token.
     require(xcertKyc.balanceOf(beneficiary) > 0);
