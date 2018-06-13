@@ -189,12 +189,23 @@ contract ZxcCrowdsale is
     payable
   {
     uint256 weiAmount = msg.value;
-
+    uint256 tokens;
     require(beneficiary != address(0));
     require(weiAmount >= minimumWeiDeposit);
 
-    //NOTE: this reverts if NOT in any of the sale time periods!
-    uint256 tokens = getTokenAmount(weiAmount);
+    if (isPrivatePresale()) {
+      tokens = getTokenAmount(weiAmount, bonusPresale);
+      require(tokens <= preSaleZxcCap);
+    }
+    else if (isPublicSaleWithBonus()) {
+      tokens = getTokenAmount(weiAmount, bonusSale);
+    }
+    else if (isPublicSaleNoBonus()) {
+      tokens = getTokenAmount(weiAmount, uint256(0));
+    }
+    else {
+      revert("Purchase outside of token sale time windows");
+    }
 
     require(zxcSold.add(tokens) <= crowdSaleZxcSupply);
     zxcSold = zxcSold.add(tokens);
@@ -275,30 +286,22 @@ contract ZxcCrowdsale is
   /**
    * @dev Calculate amount of tokens for a given wei amount. Apply special bonuses depending on
    * @param weiAmount Amount of wei for token purchase.
-   * the time of the purchase. If purchase is outside of every token sale window then revert.
-   * @return number of tokens per wei amount with possible token bonus
+   * @param bonusPercent Percentage of bonus tokens.
+   * @return Number of tokens with possible bonus.
    */
-  function getTokenAmount(uint256 weiAmount)
+  function getTokenAmount(uint256 weiAmount, uint256 bonusPercent)
     internal
     view
     returns(uint256)
   {
     uint256 tokens = weiAmount.mul(rate);
-    uint256 bonus = 0;
+    uint256 bonusTokens;
 
-    if (isPrivatePresale()) {
-      bonus = tokens.mul(bonusPresale).div(uint256(100)); // tokens *  bonus (%) / 100%
-      require(tokens.add(bonus) <= preSaleZxcCap);
+    if (bonusPercent > 0) {
+      bonusTokens = tokens.mul(bonusPercent).div(uint256(100)); // tokens *  bonus (%) / 100%
+      tokens = tokens.add(bonusTokens);
     }
-    else if (isPublicSaleWithBonus()) {
-      bonus = tokens.mul(bonusSale).div(uint256(100)); // tokens * bonus (%) / 100%
-    }
-    else if (isPublicSaleNoBonus()) {
-      // No bonus
-    }
-    else {
-      revert("Purchase outside of token sale time windows");
-    }
-    return tokens.add(bonus);
+
+    return tokens;
   }
 }

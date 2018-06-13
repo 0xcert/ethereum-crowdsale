@@ -115,12 +115,12 @@ contract ZxcCrowdsaleTestable is ZxcCrowdsale {
    * @dev Modify visibility for internal getTokenAmount function.
    * @param weiAmount amount of wei
    */
-  function getTokenAmountWrapper(uint256 weiAmount)
+  function getTokenAmountWrapper(uint256 weiAmount, uint256 bonusPercent)
     external
     view
     returns (uint256)
   {
-    return super.getTokenAmount(weiAmount);
+    return super.getTokenAmount(weiAmount, bonusPercent);
   }
 
 }
