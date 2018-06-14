@@ -303,10 +303,9 @@ contract ZxcCrowdsale is
     returns(uint256)
   {
     uint256 tokens = weiAmount.mul(rate);
-    uint256 bonusTokens;
 
     if (bonusPercent > 0) {
-      bonusTokens = tokens.mul(bonusPercent).div(uint256(100)); // tokens *  bonus (%) / 100%
+      uint256 bonusTokens = tokens.mul(bonusPercent).div(uint256(100)); // tokens * bonus (%) / 100%
       tokens = tokens.add(bonusTokens);
     }
 
