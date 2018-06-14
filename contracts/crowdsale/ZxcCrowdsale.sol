@@ -188,24 +188,22 @@ contract ZxcCrowdsale is
     external
     payable
   {
-    buyTokens(msg.sender);
+    buyTokens();
   }
 
   /**
    * @dev Low level token purchase function.
-   * @param beneficiary Address which is buying tokens.
    */
-  function buyTokens(address beneficiary)
+  function buyTokens()
     public
     payable
   {
-    // Sender can't buy tokens from one address and receive them to another.
-    require(beneficiary == msg.sender);
-    // Sender needs Xcert KYC token.
-    require(xcertKyc.balanceOf(beneficiary) > 0);
-
+    address beneficiary = msg.sender;
     uint256 weiAmount = msg.value;
     uint256 tokens;
+
+    // Sender needs Xcert KYC token.
+    require(xcertKyc.balanceOf(beneficiary) > 0);
 
     if (isPrivatePresale()) {
       require(weiAmount >= minimumWeiDeposit);
