@@ -225,7 +225,7 @@ contract ZxcCrowdsale is
     require(zxcSold.add(tokens) <= crowdSaleZxcSupply);
     zxcSold = zxcSold.add(tokens);
 
-    forwardFunds();
+    wallet.transfer(msg.value);
     require(token.transferFrom(token.owner(), beneficiary, tokens));
     emit TokenPurchase(msg.sender, beneficiary, weiAmount, tokens);
   }
@@ -241,15 +241,6 @@ contract ZxcCrowdsale is
     bool capReached = zxcSold >= crowdSaleZxcSupply;
     bool endTimeReached = now >= endTime;
     return capReached || endTimeReached;
-  }
-
-  /**
-   * @dev Send wei to the collection wallet.
-   */
-  function forwardFunds()
-    internal
-  {
-    wallet.transfer(msg.value);
   }
 
   /**

@@ -568,14 +568,6 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
       assert.strictEqual(actualTokens.toString(), '5.1e+22');
       assert.strictEqual(actualTokens.div(decimalsMul).toString(), '51000');
     });
-
-    it('forwardFunds should send ether to wallet address', async () => {
-      const weiAmount = ether(1.2);
-      const initialBalance = await web3.eth.getBalance(wallet);
-      await crowdsale.forwardFundsWrapper({from: buyerOne, value: weiAmount});
-      const newBalance = await web3.eth.getBalance(wallet);
-      assert.strictEqual(newBalance.sub(initialBalance).toString(), ether(1.2).toString());
-    });
   });
 
   describe('ZxcCrowdsale purchase tokens', function() {

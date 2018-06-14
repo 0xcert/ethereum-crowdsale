@@ -71,16 +71,6 @@ contract ZxcCrowdsaleTestable is ZxcCrowdsale {
   }
 
   /**
-   * @dev Calls internal forwardFunds function.
-   */
-  function forwardFundsWrapper()
-    external
-    payable
-  {
-    super.forwardFunds();
-  }
-
-  /**
    * @dev Modify visibility for internal isPrivatePresale function.
    */
   function isPrivatePresaleWrapper()
