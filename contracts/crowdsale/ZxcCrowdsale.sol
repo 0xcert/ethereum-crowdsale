@@ -119,7 +119,8 @@ contract ZxcCrowdsale is
    * @param _bonusSale Bonus token percentage for public sale stage with bonus.
    * @param _minimumWeiDeposit Minimum required deposit in wei.
    */
-  constructor(address _walletAddress,
+  constructor(
+    address _walletAddress,
     address _tokenAddress,
     address _xcertKycAddress,
     uint256 _startTimePresale,  // 1529971200: date -d '2018-06-26 00:00:00 UTC' +%s
@@ -293,7 +294,10 @@ contract ZxcCrowdsale is
    * @param bonusPercent Percentage of bonus tokens.
    * @return Number of tokens with possible bonus.
    */
-  function getTokenAmount(uint256 weiAmount, uint256 bonusPercent)
+  function getTokenAmount(
+    uint256 weiAmount,
+    uint256 bonusPercent
+  )
     internal
     view
     returns(uint256)

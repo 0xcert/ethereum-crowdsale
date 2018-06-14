@@ -25,21 +25,22 @@ contract ZxcCrowdsaleTestable is ZxcCrowdsale {
     _;
   }
 
-  constructor(address _walletAddress,
-              address _tokenAddress,
-              address _xcertKycAddress,
-              uint256 _startTimePresale,
-              uint256 _startTimeSaleWithBonus,
-              uint256 _startTimeSaleNoBonus,
-              uint256 _endTime,
-              uint256 _rate,
-              uint256 _presaleZxcCap,
-              uint256 _crowdSaleZxcSupply,
-              uint256 _bonusPresale,
-              uint256 _bonusSale,
-              uint256 _minimumWeiDeposit,
-              address _contractTesterAddr
-             )
+  constructor(
+    address _walletAddress,
+    address _tokenAddress,
+    address _xcertKycAddress,
+    uint256 _startTimePresale,
+    uint256 _startTimeSaleWithBonus,
+    uint256 _startTimeSaleNoBonus,
+    uint256 _endTime,
+    uint256 _rate,
+    uint256 _presaleZxcCap,
+    uint256 _crowdSaleZxcSupply,
+    uint256 _bonusPresale,
+    uint256 _bonusSale,
+    uint256 _minimumWeiDeposit,
+    address _contractTesterAddr
+  )
     ZxcCrowdsale(
       _walletAddress,
       _tokenAddress,
@@ -64,7 +65,9 @@ contract ZxcCrowdsaleTestable is ZxcCrowdsale {
    * @dev Sets zxcSold value.
    * @param amount New amount.
    */
-  function _testSetZxcSold(uint256 amount)
+  function _testSetZxcSold(
+    uint256 amount
+  )
     external
   {
     zxcSold = amount;
@@ -107,7 +110,10 @@ contract ZxcCrowdsaleTestable is ZxcCrowdsale {
    * @dev Modify visibility for internal getTokenAmount function.
    * @param weiAmount amount of wei
    */
-  function getTokenAmountWrapper(uint256 weiAmount, uint256 bonusPercent)
+  function getTokenAmountWrapper(
+    uint256 weiAmount,
+    uint256 bonusPercent
+  )
     external
     view
     returns (uint256)
