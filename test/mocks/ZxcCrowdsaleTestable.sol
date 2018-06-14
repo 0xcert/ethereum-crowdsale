@@ -71,14 +71,14 @@ contract ZxcCrowdsaleTestable is ZxcCrowdsale {
   }
 
   /**
-   * @dev Modify visibility for internal isPrivatePresale function.
+   * @dev Modify visibility for internal isPresale function.
    */
-  function isPrivatePresaleWrapper()
+  function isPresaleWrapper()
     external
     view
     returns (bool)
   {
-    return super.isPrivatePresale();
+    return super.isPresale();
   }
 
   /**

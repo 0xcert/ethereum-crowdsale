@@ -205,7 +205,7 @@ contract ZxcCrowdsale is
     // Sender needs Xcert KYC token.
     require(xcertKyc.balanceOf(beneficiary) > 0);
 
-    if (isPrivatePresale()) {
+    if (isPresale()) {
       require(weiAmount >= minimumWeiDeposit);
       tokens = getTokenAmount(weiAmount, bonusPresale);
       require(tokens <= preSaleZxcCap);
@@ -242,10 +242,10 @@ contract ZxcCrowdsale is
   }
 
   /**
-   * @dev Check if currently active period is private pre-sale with bonuses.
+   * @dev Check if currently active period is pre-sale with bonuses.
    * @return bool
    */
-  function isPrivatePresale()
+  function isPresale()
     internal
     view
     returns(bool)

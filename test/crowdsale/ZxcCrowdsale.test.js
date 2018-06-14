@@ -473,7 +473,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
       assert.strictEqual(await crowdsale.hasEnded(), false);
     });
 
-    it('hasEnded should return false if crowdsale in private sale stage, cap not reached', async () => {
+    it('hasEnded should return false if crowdsale in presale stage, cap not reached', async () => {
       await increaseTimeTo(startTimePresale + duration.seconds(30));
       assert.strictEqual(await crowdsale.hasEnded(), false);
     });
@@ -505,16 +505,16 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
       assert.strictEqual(await crowdsale.hasEnded(), true);
     });
 
-    it('isPrivatePresale should return true if in private sale stage', async () => {
+    it('isPresale should return true if in presale sale stage', async () => {
       await increaseTimeTo(startTimePresale + duration.seconds(30));
-      assert.strictEqual(await crowdsale.isPrivatePresaleWrapper(), true);
+      assert.strictEqual(await crowdsale.isPresaleWrapper(), true);
     });
 
-    it('isPrivatePresale should return false if not in private sale stage', async () => {
+    it('isPresale should return false if not in presale stage', async () => {
       // Test before we hit the stage
-      assert.strictEqual(await crowdsale.isPrivatePresaleWrapper(), false);
+      assert.strictEqual(await crowdsale.isPresaleWrapper(), false);
       await increaseTimeTo(startTimeSaleWithBonus + duration.seconds(30));
-      assert.strictEqual(await crowdsale.isPrivatePresaleWrapper(), false);
+      assert.strictEqual(await crowdsale.isPresaleWrapper(), false);
     });
 
     it('isPublicSaleWithBonus should return true if in public bonus stage', async () => {
