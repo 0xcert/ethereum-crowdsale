@@ -92,7 +92,7 @@ contract ZxcCrowdsale is
   /**
    * @dev An event which is triggered when tokens are bought.
    * @param _from The address sending tokens.
-   * @param _to The address recieving tokens.
+   * @param _to The address receiving tokens.
    * @param _weiAmount Purchase amount in wei.
    * @param _tokenAmount The amount of purchased tokens.
    */
