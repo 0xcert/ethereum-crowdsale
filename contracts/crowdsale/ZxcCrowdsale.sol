@@ -199,23 +199,21 @@ contract ZxcCrowdsale is
     public
     payable
   {
-    address beneficiary = msg.sender;
-    uint256 weiAmount = msg.value;
     uint256 tokens;
 
     // Sender needs Xcert KYC token.
-    require(xcertKyc.balanceOf(beneficiary) > 0);
+    require(xcertKyc.balanceOf(msg.sender) > 0);
 
     if (isPresale()) {
-      require(weiAmount >= minimumWeiDeposit);
-      tokens = getTokenAmount(weiAmount, bonusPresale);
+      require(msg.value >= minimumWeiDeposit);
+      tokens = getTokenAmount(msg.value, bonusPresale);
       require(tokens <= preSaleZxcCap);
     }
     else if (isPublicSaleWithBonus()) {
-      tokens = getTokenAmount(weiAmount, bonusSale);
+      tokens = getTokenAmount(msg.value, bonusSale);
     }
     else if (isPublicSaleNoBonus()) {
-      tokens = getTokenAmount(weiAmount, uint256(0));
+      tokens = getTokenAmount(msg.value, uint256(0));
     }
     else {
       revert("Purchase outside of token sale time windows");
@@ -225,8 +223,8 @@ contract ZxcCrowdsale is
     zxcSold = zxcSold.add(tokens);
 
     wallet.transfer(msg.value);
-    require(token.transferFrom(token.owner(), beneficiary, tokens));
-    emit TokenPurchase(msg.sender, beneficiary, weiAmount, tokens);
+    require(token.transferFrom(token.owner(), msg.sender, tokens));
+    emit TokenPurchase(msg.sender, msg.sender, msg.value, tokens);
   }
 
   /**
