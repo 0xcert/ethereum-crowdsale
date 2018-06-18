@@ -2,4 +2,6 @@
 .node*
 node_modules
 build
+coverage.json
+coverage
 
