@@ -20,7 +20,7 @@
     "postpublish": "npm run clean",
     "prepublish": "npm run compile",
     "test": "npm run clean && truffle test",
-    "coverage": "./node_modules/.bin/solidity-coverage"
+    "coverage": "./node_modules/.bin/solidity-coverage; cat coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js --verbose"
   },
   "author": "0xcert",
   "license": "MIT",
