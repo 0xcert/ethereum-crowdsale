@@ -204,15 +204,15 @@ contract ZxcCrowdsale is
     // Sender needs Xcert KYC token.
     require(xcertKyc.balanceOf(msg.sender) > 0);
 
-    if (isPresale()) {
+    if (isInTimeRange(startTimePresale, startTimeSaleWithBonus)) {
       require(msg.value >= minimumPresaleWeiDeposit);
       tokens = getTokenAmount(msg.value, bonusPresale);
       require(tokens <= preSaleZxcCap);
     }
-    else if (isPublicSaleWithBonus()) {
+    else if (isInTimeRange(startTimeSaleWithBonus, startTimeSaleNoBonus)) {
       tokens = getTokenAmount(msg.value, bonusSale);
     }
-    else if (isPublicSaleNoBonus()) {
+    else if (isInTimeRange(startTimeSaleNoBonus, endTime)) {
       tokens = getTokenAmount(msg.value, uint256(0));
     }
     else {
@@ -241,50 +241,23 @@ contract ZxcCrowdsale is
   }
 
   /**
-   * @dev Check if currently active period is pre-sale with bonuses.
+   * @dev Check if currently active period is a given time period.
+   * @param _startTime Starting timestamp (inclusive).
+   * @param _endTime Ending timestamp (exclusive).
    * @return bool
    */
-  function isPresale()
+  function isInTimeRange(uint256 _startTime, uint256 _endTime)
     internal
     view
     returns(bool)
   {
-    if (now >= startTimePresale && now < startTimeSaleWithBonus)
+    if (now >= _startTime && now < _endTime) {
       return true;
-    else
+    }
+    else {
       return false;
+    }
   }
-
-  /**
-   * @dev Check if currently active period is public sale with bonuses.
-   * @return bool
-   */
-  function isPublicSaleWithBonus()
-    internal
-    view
-    returns(bool)
-  {
-    if (now >= startTimeSaleWithBonus && now < startTimeSaleNoBonus)
-      return true;
-    else
-      return false;
-  }
-
-  /**
-   * @dev Check if currently active period is public sale without bonuses.
-   * @return bool
-   */
-  function isPublicSaleNoBonus()
-    internal
-    view
-    returns(bool)
-  {
-    if (now >= startTimeSaleNoBonus && now < endTime)
-      return true;
-    else
-      return false;
-  }
-
 
   /**
    * @dev Calculate amount of tokens for a given wei amount. Apply special bonuses depending on

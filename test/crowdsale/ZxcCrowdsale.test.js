@@ -505,40 +505,20 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
       assert.strictEqual(await crowdsale.hasEnded(), true);
     });
 
-    it('isPresale should return true if in presale sale stage', async () => {
+    it('isInTimeRange should return true if in time range', async () => {
       await increaseTimeTo(startTimePresale + duration.seconds(30));
-      assert.strictEqual(await crowdsale.isPresaleWrapper(), true);
+      assert.strictEqual(await crowdsale.isInTimeRangeWrapper(startTimePresale,
+        startTimeSaleWithBonus), true);
     });
 
-    it('isPresale should return false if not in presale stage', async () => {
-      // Test before we hit the stage
-      assert.strictEqual(await crowdsale.isPresaleWrapper(), false);
-      await increaseTimeTo(startTimeSaleWithBonus + duration.seconds(30));
-      assert.strictEqual(await crowdsale.isPresaleWrapper(), false);
-    });
+    it('isInTimeRange should return false if not in time range', async () => {
+      assert.strictEqual(await crowdsale.isInTimeRangeWrapper(startTimePresale,
+        startTimeSaleWithBonus), false)
 
-    it('isPublicSaleWithBonus should return true if in public bonus stage', async () => {
-      await increaseTimeTo(startTimeSaleWithBonus + duration.seconds(30));
-      assert.strictEqual(await crowdsale.isPublicSaleWithBonusWrapper(), true);
-    });
-
-    it('isPublicSaleWithBonus should return false if not in public bonus stage', async () => {
-      // Test before we hit the stage
-      assert.strictEqual(await crowdsale.isPublicSaleWithBonusWrapper(), false);
-      await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
-      assert.strictEqual(await crowdsale.isPublicSaleWithBonusWrapper(), false);
-    });
-
-    it('isPublicSaleNoBonus should return true if in public no bonus stage', async () => {
-      await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
-      assert.strictEqual(await crowdsale.isPublicSaleNoBonusWrapper(), true);
-    });
-
-    it('isPublicSaleNoBonus should return false if not in public no bonus stage', async () => {
-      // Test before we hit the stage
-      assert.strictEqual(await crowdsale.isPublicSaleNoBonusWrapper(), false);
       await increaseTimeTo(endTime + duration.seconds(30));
-      assert.strictEqual(await crowdsale.isPublicSaleNoBonusWrapper(), false);
+
+      assert.strictEqual(await crowdsale.isInTimeRangeWrapper(startTimePresale,
+        startTimeSaleWithBonus), false)
     });
 
     it('getTokenAmount should return correct num of tokens if bonus stage', async () => {
