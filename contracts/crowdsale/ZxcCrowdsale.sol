@@ -62,7 +62,7 @@ contract ZxcCrowdsale is
   /**
    * @dev Minimum required wei deposit for public presale period.
    */
-  uint256 public minimumWeiDeposit;
+  uint256 public minimumPresaleWeiDeposit;
 
   /**
    * @dev Total amount of ZXC tokens offered for the presale.
@@ -117,7 +117,7 @@ contract ZxcCrowdsale is
    * @param _crowdSaleZxcSupply Supply of ZXC tokens offered for the sale. Includes _presaleZxcCap.
    * @param _bonusPresale Bonus token percentage for presale.
    * @param _bonusSale Bonus token percentage for public sale stage with bonus.
-   * @param _minimumWeiDeposit Minimum required deposit in wei.
+   * @param _minimumPresaleWeiDeposit Minimum required deposit in wei.
    */
   constructor(
     address _walletAddress,
@@ -132,7 +132,7 @@ contract ZxcCrowdsale is
     uint256 _crowdSaleZxcSupply, // 250M
     uint256 _bonusPresale,  // 10 (%)
     uint256 _bonusSale,  // 5 (%)
-    uint256 _minimumWeiDeposit  // 1 ether;
+    uint256 _minimumPresaleWeiDeposit  // 1 ether;
   )
     public
   {
@@ -178,8 +178,8 @@ contract ZxcCrowdsale is
 
     zxcSold = 0;
 
-    require(_minimumWeiDeposit > 0);
-    minimumWeiDeposit = _minimumWeiDeposit;
+    require(_minimumPresaleWeiDeposit > 0);
+    minimumPresaleWeiDeposit = _minimumPresaleWeiDeposit;
   }
 
   /**
@@ -205,7 +205,7 @@ contract ZxcCrowdsale is
     require(xcertKyc.balanceOf(msg.sender) > 0);
 
     if (isPresale()) {
-      require(msg.value >= minimumWeiDeposit);
+      require(msg.value >= minimumPresaleWeiDeposit);
       tokens = getTokenAmount(msg.value, bonusPresale);
       require(tokens <= preSaleZxcCap);
     }

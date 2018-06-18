@@ -38,7 +38,7 @@ contract ZxcCrowdsaleTestable is ZxcCrowdsale {
     uint256 _crowdSaleZxcSupply,
     uint256 _bonusPresale,
     uint256 _bonusSale,
-    uint256 _minimumWeiDeposit,
+    uint256 _minimumPresaleWeiDeposit,
     address _contractTesterAddr
   )
     ZxcCrowdsale(
@@ -54,7 +54,7 @@ contract ZxcCrowdsaleTestable is ZxcCrowdsale {
       _crowdSaleZxcSupply,
       _bonusPresale,
       _bonusSale,
-      _minimumWeiDeposit
+      _minimumPresaleWeiDeposit
     )
     public
   {
