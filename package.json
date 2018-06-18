@@ -54,6 +54,7 @@
     "ico"
   ],
   "devDependencies": {
+    "coveralls": "^3.0.1",
     "solidity-coverage": "^0.5.4",
     "truffle": "^4.1.11",
     "truffle-flattener": "^1.2.5"
