@@ -19,7 +19,8 @@
     "networks": "truffle networks",
     "postpublish": "npm run clean",
     "prepublish": "npm run compile",
-    "test": "npm run clean && truffle test"
+    "test": "npm run clean && truffle test",
+    "coverage": "./node_modules/.bin/solidity-coverage"
   },
   "author": "0xcert",
   "license": "MIT",
