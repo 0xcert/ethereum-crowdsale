@@ -200,9 +200,13 @@ contract ZxcCrowdsale
     uint256 tokens;
 
     // Sender needs Xcert KYC token.
-    require(xcertKyc.balanceOf(msg.sender) > 0);
-
+    uint256 balance = xcertKyc.balanceOf(msg.sender);
+    require(balance > 0);
+    
     if (isInTimeRange(startTimePresale, startTimeSaleWithBonus)) {
+      uint256 tokenId = xcertKyc.tokenOfOwnerByIndex(msg.sender, balance.sub(1));
+      uint256 kycLevel = uint(xcertKyc.tokenDataValue(tokenId, 0));
+      require(kycLevel > 1);
       require(msg.value >= minimumPresaleWeiDeposit);
       tokens = getTokenAmount(msg.value, bonusPresale);
       require(tokens <= preSaleZxcCap);
