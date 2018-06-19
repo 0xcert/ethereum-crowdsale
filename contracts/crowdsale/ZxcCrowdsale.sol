@@ -1,7 +1,6 @@
 pragma solidity ^0.4.24;
 
 import "@0xcert/ethereum-utils/contracts/math/SafeMath.sol";
-import "@0xcert/ethereum-utils/contracts/ownership/Ownable.sol";
 import "@0xcert/ethereum-zxc/contracts/tokens/Zxc.sol";
 import "@0xcert/ethereum-xcert/contracts/tokens/Xcert.sol";
 
@@ -14,8 +13,7 @@ import "@0xcert/ethereum-xcert/contracts/tokens/Xcert.sol";
  *   - Token sale with 5% bonus: 2018/07/04 - 2018/07/05
  *   - Token sale with 0% bonus: 2018/07/05 - 2018/07/18
  */
-contract ZxcCrowdsale is
-  Ownable
+contract ZxcCrowdsale
 {
   using SafeMath for uint256;
 
