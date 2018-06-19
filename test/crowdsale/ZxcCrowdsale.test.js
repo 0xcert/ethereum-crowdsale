@@ -3,6 +3,7 @@ const { advanceBlock } = require('../helpers/advanceToBlock');
 const { increaseTime, increaseTimeTo, duration } = require('../helpers/increaseTime');
 const latestTime = require('../helpers/latestTime');
 const ether = require('../helpers/ether');
+const web3Util = require('web3-utils');
 
 const BigNumber = web3.BigNumber;
 
@@ -40,10 +41,14 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
   const buyerTwo = accounts[5];
   const _tester = accounts[6];  // tester should never be the default account!
   const xcertTokenOwner = accounts[7];
+  const buyerThree = accounts[8];
 
   let token;
   let xcertToken;
   let crowdsale;
+
+  const config = [web3Util.padLeft(web3Util.numberToHex(0), 64)];
+  let data;
 
   before(async () => {
     // Advance to the next block to correctly read time in the solidity "now"
@@ -577,6 +582,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
       startTimeSaleWithBonus = latestTime() + duration.hours(5);
       startTimeSaleNoBonus = latestTime() + duration.hours(8);
       endTime = latestTime() + duration.hours(12);
+      data = [web3Util.padLeft(web3Util.numberToHex(2), 64)];
 
       token = await Zxc.new({from: tokenOwner});
       xcertToken = await Xcert.new({from: xcertTokenOwner});
@@ -594,13 +600,13 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                          bonusSale,
                                          minimumWeiDeposit,
                                          {from: crowdsaleOwner});
-      // Mint KYC token for buyerOne
+      // Mint KYC token for buyerOne -> kyc level 2
       await xcertToken.mint(buyerOne,
                             123,
                             "https://foobar.io",
                             "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae",
-                            ["0xa65de9e6"],
-                            ["0xa65de9e6"],
+                            config,
+                            data,
                             {from: xcertTokenOwner});
 
       // Set crowdsale contract ZXC allowance
@@ -733,6 +739,52 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
       assert.strictEqual(actualTokens.toString(), expectedTokens.add(expectedBonus).toString());
     });
 
+    it('buyTokens should fail purchasing tokens if buyers kyc token is level 1 in presale', async () => {
+      const weiAmount = ether(1);
+      data = [web3Util.padLeft(web3Util.numberToHex(1), 64)];
+      // Mint KYC token for buyerThree -> kyc level 1
+      await xcertToken.mint(buyerThree,
+                            1234,
+                            "https://foobar.io",
+                            "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae",
+                            config,
+                            data,
+                            {from: xcertTokenOwner});
+     
+      await increaseTimeTo(startTimePresale + duration.seconds(30));
+      await assertRevert(crowdsale.buyTokens({from: buyerThree, value: weiAmount}));
+    });
+
+    it('buyTokens should purchase tokens if buyers has multiple kyc tokens but the last one is level 2 in presale', async () => {
+      const weiAmount = ether(1);
+      const expectedTokens = weiAmount.mul(rate);
+      const expectedBonus =  expectedTokens.div(bonusPresaleDivisor);
+
+      data = [web3Util.padLeft(web3Util.numberToHex(1), 64)];
+      // Mint KYC token for buyerThree -> kyc level 1
+      await xcertToken.mint(buyerThree,
+                            1234,
+                            "https://foobar.io",
+                            "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae",
+                            config,
+                            data,
+                            {from: xcertTokenOwner});
+
+      data = [web3Util.padLeft(web3Util.numberToHex(2), 64)];
+      await xcertToken.mint(buyerThree,
+                            12345,
+                            "https://foobar.io",
+                            "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae",
+                            config,
+                            data,
+                            {from: xcertTokenOwner});
+     
+      await increaseTimeTo(startTimePresale + duration.seconds(30));
+      await crowdsale.buyTokens({from: buyerThree, value: weiAmount});
+      const actualTokens = await token.balanceOf(buyerThree);
+      assert.strictEqual(actualTokens.toString(), expectedTokens.add(expectedBonus).toString());
+    });
+
     it('buyTokens should purchase tokens for less than presale min deposit in sale period', async () => {
       const weiAmount = ether(0.01);
       const expectedTokens = weiAmount.mul(rate);
@@ -741,6 +793,25 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
 
       await crowdsale.buyTokens({from: buyerOne, value: weiAmount});
       const actualTokens = await token.balanceOf(buyerOne);
+      assert.strictEqual(actualTokens.toString(), expectedTokens.toString());
+    });
+
+    it('buyTokens should purchase tokens if buyer kyc token is level 1 in crowdsale', async () => {
+      const weiAmount = ether(0.01);
+      const expectedTokens = weiAmount.mul(rate);
+      data = [web3Util.padLeft(web3Util.numberToHex(1), 64)];
+      // Mint KYC token for buyerThree -> kyc level 1
+      await xcertToken.mint(buyerThree,
+                            1234,
+                            "https://foobar.io",
+                            "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae",
+                            config,
+                            data,
+                            {from: xcertTokenOwner});
+     
+      await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
+      await crowdsale.buyTokens({from: buyerThree, value: weiAmount});
+      const actualTokens = await token.balanceOf(buyerThree);
       assert.strictEqual(actualTokens.toString(), expectedTokens.toString());
     });
 
