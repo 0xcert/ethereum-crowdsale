@@ -244,7 +244,10 @@ contract ZxcCrowdsale
    * @param _endTime Ending timestamp (exclusive).
    * @return bool
    */
-  function isInTimeRange(uint256 _startTime, uint256 _endTime)
+  function isInTimeRange(
+    uint256 _startTime,
+    uint256 _endTime
+  )
     internal
     view
     returns(bool)
