@@ -1,7 +1,6 @@
 pragma solidity ^0.4.24;
 
 import "@0xcert/ethereum-utils/contracts/math/SafeMath.sol";
-import "@0xcert/ethereum-utils/contracts/ownership/Ownable.sol";
 import "@0xcert/ethereum-zxc/contracts/tokens/Zxc.sol";
 import "@0xcert/ethereum-xcert/contracts/tokens/Xcert.sol";
 
@@ -14,8 +13,7 @@ import "@0xcert/ethereum-xcert/contracts/tokens/Xcert.sol";
  *   - Token sale with 5% bonus: 2018/07/04 - 2018/07/05
  *   - Token sale with 0% bonus: 2018/07/05 - 2018/07/18
  */
-contract ZxcCrowdsale is
-  Ownable
+contract ZxcCrowdsale
 {
   using SafeMath for uint256;
 
@@ -62,7 +60,7 @@ contract ZxcCrowdsale is
   /**
    * @dev Minimum required wei deposit for public presale period.
    */
-  uint256 public minimumWeiDeposit;
+  uint256 public minimumPresaleWeiDeposit;
 
   /**
    * @dev Total amount of ZXC tokens offered for the presale.
@@ -92,7 +90,7 @@ contract ZxcCrowdsale is
   /**
    * @dev An event which is triggered when tokens are bought.
    * @param _from The address sending tokens.
-   * @param _to The address recieving tokens.
+   * @param _to The address receiving tokens.
    * @param _weiAmount Purchase amount in wei.
    * @param _tokenAmount The amount of purchased tokens.
    */
@@ -117,7 +115,7 @@ contract ZxcCrowdsale is
    * @param _crowdSaleZxcSupply Supply of ZXC tokens offered for the sale. Includes _presaleZxcCap.
    * @param _bonusPresale Bonus token percentage for presale.
    * @param _bonusSale Bonus token percentage for public sale stage with bonus.
-   * @param _minimumWeiDeposit Minimum required deposit in wei.
+   * @param _minimumPresaleWeiDeposit Minimum required deposit in wei.
    */
   constructor(
     address _walletAddress,
@@ -132,7 +130,7 @@ contract ZxcCrowdsale is
     uint256 _crowdSaleZxcSupply, // 250M
     uint256 _bonusPresale,  // 10 (%)
     uint256 _bonusSale,  // 5 (%)
-    uint256 _minimumWeiDeposit  // 1 ether;
+    uint256 _minimumPresaleWeiDeposit  // 1 ether;
   )
     public
   {
@@ -178,8 +176,8 @@ contract ZxcCrowdsale is
 
     zxcSold = 0;
 
-    require(_minimumWeiDeposit > 0);
-    minimumWeiDeposit = _minimumWeiDeposit;
+    require(_minimumPresaleWeiDeposit > 0);
+    minimumPresaleWeiDeposit = _minimumPresaleWeiDeposit;
   }
 
   /**
@@ -199,23 +197,21 @@ contract ZxcCrowdsale is
     public
     payable
   {
-    address beneficiary = msg.sender;
-    uint256 weiAmount = msg.value;
     uint256 tokens;
 
     // Sender needs Xcert KYC token.
-    require(xcertKyc.balanceOf(beneficiary) > 0);
+    require(xcertKyc.balanceOf(msg.sender) > 0);
 
-    if (isPresale()) {
-      require(weiAmount >= minimumWeiDeposit);
-      tokens = getTokenAmount(weiAmount, bonusPresale);
+    if (isInTimeRange(startTimePresale, startTimeSaleWithBonus)) {
+      require(msg.value >= minimumPresaleWeiDeposit);
+      tokens = getTokenAmount(msg.value, bonusPresale);
       require(tokens <= preSaleZxcCap);
     }
-    else if (isPublicSaleWithBonus()) {
-      tokens = getTokenAmount(weiAmount, bonusSale);
+    else if (isInTimeRange(startTimeSaleWithBonus, startTimeSaleNoBonus)) {
+      tokens = getTokenAmount(msg.value, bonusSale);
     }
-    else if (isPublicSaleNoBonus()) {
-      tokens = getTokenAmount(weiAmount, uint256(0));
+    else if (isInTimeRange(startTimeSaleNoBonus, endTime)) {
+      tokens = getTokenAmount(msg.value, uint256(0));
     }
     else {
       revert("Purchase outside of token sale time windows");
@@ -225,8 +221,8 @@ contract ZxcCrowdsale is
     zxcSold = zxcSold.add(tokens);
 
     wallet.transfer(msg.value);
-    require(token.transferFrom(token.owner(), beneficiary, tokens));
-    emit TokenPurchase(msg.sender, beneficiary, weiAmount, tokens);
+    require(token.transferFrom(token.owner(), msg.sender, tokens));
+    emit TokenPurchase(msg.sender, msg.sender, msg.value, tokens);
   }
 
   /**
@@ -243,50 +239,26 @@ contract ZxcCrowdsale is
   }
 
   /**
-   * @dev Check if currently active period is pre-sale with bonuses.
+   * @dev Check if currently active period is a given time period.
+   * @param _startTime Starting timestamp (inclusive).
+   * @param _endTime Ending timestamp (exclusive).
    * @return bool
    */
-  function isPresale()
+  function isInTimeRange(
+    uint256 _startTime,
+    uint256 _endTime
+  )
     internal
     view
     returns(bool)
   {
-    if (now >= startTimePresale && now < startTimeSaleWithBonus)
+    if (now >= _startTime && now < _endTime) {
       return true;
-    else
+    }
+    else {
       return false;
+    }
   }
-
-  /**
-   * @dev Check if currently active period is public sale with bonuses.
-   * @return bool
-   */
-  function isPublicSaleWithBonus()
-    internal
-    view
-    returns(bool)
-  {
-    if (now >= startTimeSaleWithBonus && now < startTimeSaleNoBonus)
-      return true;
-    else
-      return false;
-  }
-
-  /**
-   * @dev Check if currently active period is public sale without bonuses.
-   * @return bool
-   */
-  function isPublicSaleNoBonus()
-    internal
-    view
-    returns(bool)
-  {
-    if (now >= startTimeSaleNoBonus && now < endTime)
-      return true;
-    else
-      return false;
-  }
-
 
   /**
    * @dev Calculate amount of tokens for a given wei amount. Apply special bonuses depending on
