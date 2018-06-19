@@ -19,7 +19,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
   const rate = new BigNumber(10000);  // 1 ETH = 10,000 ZXC
   const crowdSaleZxcSupply = new BigNumber(250000001).mul(decimalsMul);  // 250M + 1, 18 decimals
   const preSaleZxcCap = crowdSaleZxcSupply.sub(55000000);  // 195M
-  const minimumWeiDeposit = ether(1);
+  const minimumPresaleWeiDeposit = ether(1);
   let startTimePresale;
   let startTimeSaleWithBonus;
   let startTimeSaleNoBonus;
@@ -79,7 +79,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                          crowdSaleZxcSupply,
                                          bonusPresale,
                                          bonusSale,
-                                         minimumWeiDeposit,
+                                         minimumPresaleWeiDeposit,
                                          {from: crowdsaleOwner});
     });
 
@@ -129,9 +129,9 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
       assert.strictEqual(actualBonusSale.toString(), bonusSale.toString());
     });
 
-    it('constructor should set correct minimumWeiDeposit', async () => {
-      const actualMinDeposit = await crowdsale.minimumWeiDeposit.call();
-      assert.strictEqual(actualMinDeposit.toString(), minimumWeiDeposit.toString());
+    it('constructor should set correct minimumPresaleWeiDeposit', async () => {
+      const actualMinDeposit = await crowdsale.minimumPresaleWeiDeposit.call();
+      assert.strictEqual(actualMinDeposit.toString(), minimumPresaleWeiDeposit.toString());
     });
 
     it('constructor should set correct zxcSold value', async () => {
@@ -153,7 +153,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           crowdSaleZxcSupply,
                                           bonusPresale,
                                           bonusSale,
-                                          minimumWeiDeposit));
+                                          minimumPresaleWeiDeposit));
     });
     it('constructor should fail with wallet address set to 0', async () => {
       await assertRevert(ZxcCrowdsale.new(0,
@@ -168,7 +168,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           crowdSaleZxcSupply,
                                           bonusPresale,
                                           bonusSale,
-                                          minimumWeiDeposit));
+                                          minimumPresaleWeiDeposit));
     });
 
     it('constructor should set correct wallet address', async () => {
@@ -184,7 +184,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                                 crowdSaleZxcSupply,
                                                 bonusPresale,
                                                 bonusSale,
-                                                minimumWeiDeposit);
+                                                minimumPresaleWeiDeposit);
       assert.strictEqual(await _crowdsale.wallet.call(), wallet);
     });
 
@@ -201,7 +201,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                                 crowdSaleZxcSupply,
                                                 bonusPresale,
                                                 bonusSale,
-                                                minimumWeiDeposit);
+                                                minimumPresaleWeiDeposit);
       assert.strictEqual(await _crowdsale.xcertKyc.call(), xcertToken.address);
     });
 
@@ -218,7 +218,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           crowdSaleZxcSupply,
                                           bonusPresale,
                                           bonusSale,
-                                          minimumWeiDeposit));
+                                          minimumPresaleWeiDeposit));
     });
 
     it('constructor should fail with token address set to 0', async () => {
@@ -234,7 +234,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           crowdSaleZxcSupply,
                                           bonusPresale,
                                           bonusSale,
-                                          minimumWeiDeposit));
+                                          minimumPresaleWeiDeposit));
     });
 
     it('constructor should fail if token address equals Xcert token address', async () => {
@@ -250,7 +250,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           crowdSaleZxcSupply,
                                           bonusPresale,
                                           bonusSale,
-                                          minimumWeiDeposit));
+                                          minimumPresaleWeiDeposit));
     });
 
     it('constructor should fail if wallet address equals Xcert token address', async () => {
@@ -266,7 +266,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           crowdSaleZxcSupply,
                                           bonusPresale,
                                           bonusSale,
-                                          minimumWeiDeposit));
+                                          minimumPresaleWeiDeposit));
     });
 
     it('constructor should fail if wallet address equals token address', async () => {
@@ -282,7 +282,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           crowdSaleZxcSupply,
                                           bonusPresale,
                                           bonusSale,
-                                          minimumWeiDeposit));
+                                          minimumPresaleWeiDeposit));
     });
 
     it('constructor should fail if bonusPresale == 0', async () => {
@@ -298,7 +298,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           crowdSaleZxcSupply,
                                           0,
                                           bonusSale,
-                                          minimumWeiDeposit));
+                                          minimumPresaleWeiDeposit));
     });
 
     it('constructor should fail if bonusPresale > 100', async () => {
@@ -314,7 +314,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           crowdSaleZxcSupply,
                                           101,
                                           bonusSale,
-                                          minimumWeiDeposit));
+                                          minimumPresaleWeiDeposit));
     });
 
     it('constructor should fail if bonusSale == 0', async () => {
@@ -330,7 +330,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           crowdSaleZxcSupply,
                                           bonusPresale,
                                           0,
-                                          minimumWeiDeposit));
+                                          minimumPresaleWeiDeposit));
     });
 
     it('constructor should fail if bonusSale > 100', async () => {
@@ -346,7 +346,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           crowdSaleZxcSupply,
                                           bonusPresale,
                                           101,
-                                          minimumWeiDeposit));
+                                          minimumPresaleWeiDeposit));
     });
 
     it('constructor should fail with rate set to zero', async () => {
@@ -362,7 +362,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           crowdSaleZxcSupply,
                                           bonusPresale,
                                           bonusSale,
-                                          minimumWeiDeposit));
+                                          minimumPresaleWeiDeposit));
     });
 
     it('constructor should fail if token decimals != 18', async () => {
@@ -379,7 +379,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           crowdSaleZxcSupply,
                                           bonusPresale,
                                           bonusSale,
-                                          minimumWeiDeposit));
+                                          minimumPresaleWeiDeposit));
     });
 
     it('constructor should fail with zero presale token cap', async () => {
@@ -395,7 +395,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           crowdSaleZxcSupply,
                                           bonusPresale,
                                           bonusSale,
-                                          minimumWeiDeposit));
+                                          minimumPresaleWeiDeposit));
     });
 
     it('constructor should fail with presale token cap > crowdsale token supply', async () => {
@@ -411,7 +411,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           crowdSaleZxcSupply,
                                           bonusPresale,
                                           bonusSale,
-                                          minimumWeiDeposit));
+                                          minimumPresaleWeiDeposit));
     });
 
     it('constructor should fail with zero crowdsale token supply', async () => {
@@ -427,10 +427,10 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                           0,
                                           bonusPresale,
                                           bonusSale,
-                                          minimumWeiDeposit));
+                                          minimumPresaleWeiDeposit));
     });
 
-    it('constructor should fail with too low minimumWeiDeposit', async () => {
+    it('constructor should fail with too low minimumPresaleWeiDeposit', async () => {
       await assertRevert(ZxcCrowdsale.new(wallet,
                                           token.address,
                                           xcertToken.address,
@@ -469,7 +469,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                                  crowdSaleZxcSupply,
                                                  bonusPresale,
                                                  bonusSale,
-                                                 minimumWeiDeposit,
+                                                 minimumPresaleWeiDeposit,
                                                  _tester,
                                                  {from: crowdsaleOwner});
     });
@@ -510,40 +510,20 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
       assert.strictEqual(await crowdsale.hasEnded(), true);
     });
 
-    it('isPresale should return true if in presale sale stage', async () => {
+    it('isInTimeRange should return true if in time range', async () => {
       await increaseTimeTo(startTimePresale + duration.seconds(30));
-      assert.strictEqual(await crowdsale.isPresaleWrapper(), true);
+      assert.strictEqual(await crowdsale.isInTimeRangeWrapper(startTimePresale,
+        startTimeSaleWithBonus), true);
     });
 
-    it('isPresale should return false if not in presale stage', async () => {
-      // Test before we hit the stage
-      assert.strictEqual(await crowdsale.isPresaleWrapper(), false);
-      await increaseTimeTo(startTimeSaleWithBonus + duration.seconds(30));
-      assert.strictEqual(await crowdsale.isPresaleWrapper(), false);
-    });
+    it('isInTimeRange should return false if not in time range', async () => {
+      assert.strictEqual(await crowdsale.isInTimeRangeWrapper(startTimePresale,
+        startTimeSaleWithBonus), false)
 
-    it('isPublicSaleWithBonus should return true if in public bonus stage', async () => {
-      await increaseTimeTo(startTimeSaleWithBonus + duration.seconds(30));
-      assert.strictEqual(await crowdsale.isPublicSaleWithBonusWrapper(), true);
-    });
-
-    it('isPublicSaleWithBonus should return false if not in public bonus stage', async () => {
-      // Test before we hit the stage
-      assert.strictEqual(await crowdsale.isPublicSaleWithBonusWrapper(), false);
-      await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
-      assert.strictEqual(await crowdsale.isPublicSaleWithBonusWrapper(), false);
-    });
-
-    it('isPublicSaleNoBonus should return true if in public no bonus stage', async () => {
-      await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
-      assert.strictEqual(await crowdsale.isPublicSaleNoBonusWrapper(), true);
-    });
-
-    it('isPublicSaleNoBonus should return false if not in public no bonus stage', async () => {
-      // Test before we hit the stage
-      assert.strictEqual(await crowdsale.isPublicSaleNoBonusWrapper(), false);
       await increaseTimeTo(endTime + duration.seconds(30));
-      assert.strictEqual(await crowdsale.isPublicSaleNoBonusWrapper(), false);
+
+      assert.strictEqual(await crowdsale.isInTimeRangeWrapper(startTimePresale,
+        startTimeSaleWithBonus), false)
     });
 
     it('getTokenAmount should return correct num of tokens if bonus stage', async () => {
@@ -598,7 +578,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                          crowdSaleZxcSupply,
                                          bonusPresale,
                                          bonusSale,
-                                         minimumWeiDeposit,
+                                         minimumPresaleWeiDeposit,
                                          {from: crowdsaleOwner});
       // Mint KYC token for buyerOne -> kyc level 2
       await xcertToken.mint(buyerOne,
@@ -652,7 +632,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                          crowdSaleZxcSupply,
                                          bonusPresale,
                                          bonusSale,
-                                         minimumWeiDeposit,
+                                         minimumPresaleWeiDeposit,
                                          {from: crowdsaleOwner});
 
       // Set crowdsale contract ZXC allowance
@@ -832,7 +812,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                          crowdsaleCap,
                                          bonusPresale,
                                          bonusSale,
-                                         minimumWeiDeposit,
+                                         minimumPresaleWeiDeposit,
                                          {from: crowdsaleOwner});
       // Set crowdsale contract ZXC allowance
       await token.approve(crowdsale.address, crowdsaleCap, {from: tokenOwner});
@@ -860,7 +840,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                          crowdsaleCap,
                                          bonusPresale,
                                          bonusSale,
-                                         minimumWeiDeposit,
+                                         minimumPresaleWeiDeposit,
                                          {from: crowdsaleOwner});
 
       await token.approve(crowdsale.address, crowdsaleCap, {from: tokenOwner});

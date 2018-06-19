@@ -38,7 +38,7 @@ contract ZxcCrowdsaleTestable is ZxcCrowdsale {
     uint256 _crowdSaleZxcSupply,
     uint256 _bonusPresale,
     uint256 _bonusSale,
-    uint256 _minimumWeiDeposit,
+    uint256 _minimumPresaleWeiDeposit,
     address _contractTesterAddr
   )
     ZxcCrowdsale(
@@ -54,7 +54,7 @@ contract ZxcCrowdsaleTestable is ZxcCrowdsale {
       _crowdSaleZxcSupply,
       _bonusPresale,
       _bonusSale,
-      _minimumWeiDeposit
+      _minimumPresaleWeiDeposit
     )
     public
   {
@@ -74,36 +74,14 @@ contract ZxcCrowdsaleTestable is ZxcCrowdsale {
   }
 
   /**
-   * @dev Modify visibility for internal isPresale function.
+   * @dev Modify visibility for internal isInTimeRange function.
    */
-  function isPresaleWrapper()
+  function isInTimeRangeWrapper(uint256 _startTime, uint256 _endTime)
     external
     view
     returns (bool)
   {
-    return super.isPresale();
-  }
-
-  /**
-   * @dev Modify visibility for internal isPublicSaleWithBonus function.
-   */
-  function isPublicSaleWithBonusWrapper()
-    external
-    view
-    returns (bool)
-  {
-    return super.isPublicSaleWithBonus();
-  }
-
-  /**
-   * @dev Modify visibility for internal isPublicSaleNoBonus function.
-   */
-  function isPublicSaleNoBonusWrapper()
-    external
-    view
-    returns (bool)
-  {
-    return super.isPublicSaleNoBonus();
+    return super.isInTimeRange(_startTime, _endTime);
   }
 
   /**
