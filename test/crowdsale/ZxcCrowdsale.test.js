@@ -879,6 +879,49 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
       });
     });
 
+    describe('KYC level 0', function() {
+
+      beforeEach(async () => {
+        data = [web3Util.padLeft(web3Util.numberToHex(0), 64)];
+  
+        await xcertToken.mint(buyer,
+                              123,
+                              "https://foobar.io",
+                              "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae",
+                              config,
+                              data,
+                              {from: xcertTokenOwner});
+      });
+
+      it('buyTokens should fail in presale', async () => {
+        const weiAmount = ether(2.1);
+  
+        await increaseTimeTo(startTimePresale + duration.seconds(30));
+        await assertRevert(crowdsale.buyTokens({from: buyer, value: weiAmount}));
+      });
+
+      it('buyTokens should fail in crowdsale with bonus', async () => {
+        const weiAmount = ether(2.1);
+  
+        await increaseTimeTo(startTimeSaleWithBonus + duration.seconds(30));
+        await assertRevert(crowdsale.buyTokens({from: buyer, value: weiAmount}));
+      });
+
+      it('buyTokens should fail in crowdsale with no bonus', async () => {
+        const weiAmount = ether(2.1);
+  
+        await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
+        await assertRevert(crowdsale.buyTokens({from: buyer, value: weiAmount}));
+      });
+  
+      it('fallback function should fail', async () => {
+        const weiAmount = ether(2.1);
+  
+        await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
+        await assertRevert(crowdsale.sendTransaction({from: buyer, value: weiAmount}));
+      });
+    });
+
     describe('no KYC', function() {
       it('buyTokens should fail in presale', async () => {
         const weiAmount = ether(2.1);
