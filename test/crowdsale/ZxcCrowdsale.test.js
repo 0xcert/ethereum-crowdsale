@@ -38,6 +38,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
   const tokenOwner = accounts[2];
   const wallet = accounts[3];
   const buyer = accounts[4];
+  const buyerTwo = accounts[8];
   const _tester = accounts[6];  // tester should never be the default account!
   const xcertTokenOwner = accounts[7];
 
@@ -593,6 +594,13 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                               config,
                               data,
                               {from: xcertTokenOwner});
+        await xcertToken.mint(buyerTwo,
+                              124,
+                              "https://foobar2.io",
+                              "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e711",
+                              config,
+                              data,
+                              {from: xcertTokenOwner});
       });
 
       it('buyTokens should purchase tokens when in public presale', async () => {
@@ -600,9 +608,9 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
         const expectedSoldTokens = weiAmount.mul(rate);
         const expectedBonus =  expectedSoldTokens.div(bonusPresaleDivisor);
         const startWalconstBalance = await web3.eth.getBalance(wallet);
-  
+
         await increaseTimeTo(startTimePresale + duration.seconds(30));
-  
+
         const { logs } = await crowdsale.buyTokens({from: buyer, value: weiAmount});
         const actualBalance = await token.balanceOf(buyer);
         // Buyer should get correct number of tokens
@@ -613,13 +621,44 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
         // Counter for sold ZXC should be increased
         const zxcSold = await crowdsale.zxcSold.call();
         assert.strictEqual(zxcSold.toString(), expectedSoldTokens.add(expectedBonus).toString());
-  
+
         const event = logs.find(e => e.event === 'TokenPurchase');
         assert.notEqual(event, undefined);
       });
-  
+
       it('buyTokens should revert purchase tokens when in public presale and cap reached', async () => {
-        const weiAmount = ether("11.1");
+        const weiAmount1 = ether("1.0");
+        const weiAmount2 = ether("1.0");
+        const presaleCap = new BigNumber("2.2").mul(decimalsMul).mul(rate);
+        crowdsale = await ZxcCrowdsale.new(wallet,
+                                           token.address,
+                                           xcertToken.address,
+                                           startTimePresale,
+                                           startTimeSaleWithBonus,
+                                           startTimeSaleNoBonus,
+                                           endTime,
+                                           rate,
+                                           presaleCap,
+                                           crowdSaleZxcSupply,
+                                           bonusPresale,
+                                           bonusSale,
+                                           minimumPresaleWeiDeposit,
+                                           {from: crowdsaleOwner});
+
+        // Set crowdsale contract ZXC allowance
+        await token.approve(crowdsale.address, crowdSaleZxcSupply, {from: tokenOwner});
+        await token.setCrowdsaleAddress(crowdsale.address, {from: tokenOwner});
+        await increaseTimeTo(startTimePresale + duration.seconds(30));
+
+        await crowdsale.buyTokens({from: buyer, value: weiAmount1});
+        await crowdsale.buyTokens({from: buyerTwo, value: weiAmount2});
+        // Cap reached, next transaction should fail.
+        await assertRevert(crowdsale.buyTokens({from: buyerTwo, value: weiAmount2}));
+      });
+
+      it('buyTokens should revert purchase tokens when in public presale and over cap', async () => {
+        const weiAmount1 = ether("8.1");
+        const weiAmount2 = ether("3.2");
         const presaleCap = new BigNumber("10").mul(decimalsMul).mul(rate);
         crowdsale = await ZxcCrowdsale.new(wallet,
                                            token.address,
@@ -635,23 +674,51 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                            bonusSale,
                                            minimumPresaleWeiDeposit,
                                            {from: crowdsaleOwner});
-  
+
         // Set crowdsale contract ZXC allowance
         await token.approve(crowdsale.address, crowdSaleZxcSupply, {from: tokenOwner});
         await token.setCrowdsaleAddress(crowdsale.address, {from: tokenOwner});
         await increaseTimeTo(startTimePresale + duration.seconds(30));
-  
+
+        await crowdsale.buyTokens({from: buyer, value: weiAmount1});
+        // Next transaction has amount that goes over the cap so we should revert.
+        await assertRevert(crowdsale.buyTokens({from: buyerTwo, value: weiAmount2}));
+      });
+
+      it('buyTokens should revert purchase tokens when in public presale amount > cap', async () => {
+        const weiAmount = ether("3.1");
+        const presaleCap = new BigNumber("3").mul(decimalsMul).mul(rate);
+        crowdsale = await ZxcCrowdsale.new(wallet,
+                                           token.address,
+                                           xcertToken.address,
+                                           startTimePresale,
+                                           startTimeSaleWithBonus,
+                                           startTimeSaleNoBonus,
+                                           endTime,
+                                           rate,
+                                           presaleCap,
+                                           crowdSaleZxcSupply,
+                                           bonusPresale,
+                                           bonusSale,
+                                           minimumPresaleWeiDeposit,
+                                           {from: crowdsaleOwner});
+
+        // Set crowdsale contract ZXC allowance
+        await token.approve(crowdsale.address, crowdSaleZxcSupply, {from: tokenOwner});
+        await token.setCrowdsaleAddress(crowdsale.address, {from: tokenOwner});
+        await increaseTimeTo(startTimePresale + duration.seconds(30));
+
         await assertRevert(crowdsale.buyTokens({from: buyer, value: weiAmount}));
       });
-  
+
       it('buyTokens should purchase tokens when in public sale with bonus', async () => {
         const weiAmount = ether("7.1234");
         const expectedSoldTokens = weiAmount.mul(rate);
         const expectedBonus =  expectedSoldTokens.div(bonusSaleDivisor);
         const startWalconstBalance = await web3.eth.getBalance(wallet);
-  
+
         await increaseTimeTo(startTimeSaleWithBonus + duration.seconds(30));
-  
+
         const { logs } = await crowdsale.buyTokens({from: buyer, value: weiAmount});
         const actualBalance = await token.balanceOf(buyer);
         // Buyer should get correct number of tokens
@@ -662,18 +729,47 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
         // Counter for sold ZXC should be increased
         const zxcSold = await crowdsale.zxcSold.call();
         assert.strictEqual(zxcSold.toString(), expectedSoldTokens.add(expectedBonus).toString());
-  
+
         const event = logs.find(e => e.event === 'TokenPurchase');
         assert.notEqual(event, undefined);
       });
-  
+
+      it('buyTokens should purchase tokens when in public sale with bonus - 2tx', async () => {
+        const weiAmount1 = ether("1.1234");
+        const expectedSoldTokens1 = weiAmount1.mul(rate);
+        const expectedBonus1 =  expectedSoldTokens1.div(bonusSaleDivisor);
+
+        const weiAmount2 = ether("4.1212");
+        const expectedSoldTokens2 = weiAmount2.mul(rate);
+        const expectedBonus2 =  expectedSoldTokens2.div(bonusSaleDivisor);
+
+        const startWalconstBalance = await web3.eth.getBalance(wallet);
+
+        await increaseTimeTo(startTimeSaleWithBonus + duration.seconds(30));
+
+        await crowdsale.buyTokens({from: buyer, value: weiAmount1});
+        await crowdsale.buyTokens({from: buyerTwo, value: weiAmount2});
+        const actualBalance1 = await token.balanceOf(buyer);
+        const actualBalance2 = await token.balanceOf(buyerTwo);
+        // Buyer should get correct number of tokens
+        assert.equal(actualBalance1.toString(), expectedSoldTokens1.add(expectedBonus1).toString());
+        assert.equal(actualBalance2.toString(), expectedSoldTokens2.add(expectedBonus2).toString());
+        // wallet should receive correct amount of wei
+        const endWalletBalance = await web3.eth.getBalance(wallet);
+        assert.strictEqual(endWalletBalance.sub(startWalconstBalance).toString(), weiAmount1.add(weiAmount2).toString());
+        // Counter for sold ZXC should be increased
+        const zxcSold = await crowdsale.zxcSold.call();
+        assert.strictEqual(zxcSold.toString(),
+          expectedSoldTokens1.add(expectedBonus1).add(expectedSoldTokens2).add(expectedBonus2).toString());
+      });
+
       it('buyTokens should purchase tokens when in public sale with no bonus', async () => {
-        const weiAmount = ether("3.333333333333333333");
+        const weiAmount = ether("1.033333333333333333");
         const expectedSoldTokens = weiAmount.mul(rate);
         const startWalletBalance = await web3.eth.getBalance(wallet);
-  
+
         await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
-  
+
         const { logs } = await crowdsale.buyTokens({from: buyer, value: weiAmount});
         const actualBalance = await token.balanceOf(buyer);
         // Buyer should get correct number of tokens
@@ -684,58 +780,99 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
         // Counter for sold ZXC should be increased
         const zxcSold = await crowdsale.zxcSold.call();
         assert.strictEqual(zxcSold.toString(), expectedSoldTokens.toString());
-  
+
         const event = logs.find(e => e.event === 'TokenPurchase');
         assert.notEqual(event, undefined);
       });
-  
+
+      it('buyTokens should purchase tokens when in public sale with no bonus - 2tx', async () => {
+        const weiAmount1 = ether("1.1234");
+        const expectedSoldTokens1 = weiAmount1.mul(rate);
+
+        const weiAmount2 = ether("3.1212");
+        const expectedSoldTokens2 = weiAmount2.mul(rate);
+
+        const startWalconstBalance = await web3.eth.getBalance(wallet);
+
+        await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
+
+        await crowdsale.buyTokens({from: buyer, value: weiAmount1});
+        await crowdsale.buyTokens({from: buyerTwo, value: weiAmount2});
+        const actualBalance1 = await token.balanceOf(buyer);
+        const actualBalance2 = await token.balanceOf(buyerTwo);
+        // Buyer should get correct number of tokens
+        assert.equal(actualBalance1.toString(), expectedSoldTokens1.toString());
+        assert.equal(actualBalance2.toString(), expectedSoldTokens2.toString());
+        // wallet should receive correct amount of wei
+        const endWalletBalance = await web3.eth.getBalance(wallet);
+        assert.strictEqual(endWalletBalance.sub(startWalconstBalance).toString(), weiAmount1.add(weiAmount2).toString());
+        // Counter for sold ZXC should be increased
+        const zxcSold = await crowdsale.zxcSold.call();
+        assert.strictEqual(zxcSold.toString(),
+          expectedSoldTokens1.add(expectedSoldTokens2).toString());
+      });
+
       it('buyTokens should revert purchase tokens prior to the sale', async () => {
         const weiAmount = ether("12.8");
         await assertRevert(crowdsale.buyTokens({from: buyer, value: weiAmount}));
       });
-  
+
       it('buyTokens should revert purchase tokens after the sale', async () => {
         const weiAmount = ether("12.8");
         await increaseTimeTo(endTime + duration.seconds(30));
-  
+
         await assertRevert(crowdsale.buyTokens({from: buyer, value: weiAmount}));
       });
-  
+
       it('buyTokens should fail purchasing tokens if less than min deposit in presale', async () => {
         const weiAmount = ether(0.03);
         await increaseTimeTo(startTimePresale + duration.seconds(30));
-  
+
         await assertRevert(crowdsale.buyTokens({from: buyer, value: weiAmount}));
       });
-  
+
       it('buyTokens should purchase tokens for min deposit in presale', async () => {
         const weiAmount = ether(1);
         const expectedTokens = weiAmount.mul(rate);
         const expectedBonus =  expectedTokens.div(bonusPresaleDivisor);
-  
+
         await increaseTimeTo(startTimePresale + duration.seconds(30));
-  
+
         await crowdsale.buyTokens({from: buyer, value: weiAmount});
         const actualTokens = await token.balanceOf(buyer);
         assert.strictEqual(actualTokens.toString(), expectedTokens.add(expectedBonus).toString());
       });
 
-      it('buyTokens should purchase tokens for less than presale min deposit in sale period', async () => {
+      it('buyTokens should purchase tokens for less than presale min deposit in sale with bonus period', async () => {
         const weiAmount = ether(0.01);
         const expectedTokens = weiAmount.mul(rate);
-  
+        const expectedBonus = weiAmount.mul(rate).div(bonusSaleDivisor);
+
+        await increaseTimeTo(startTimeSaleWithBonus + duration.seconds(30));
+
+        await crowdsale.buyTokens({from: buyer, value: weiAmount});
+        const actualTokens = await token.balanceOf(buyer);
+        assert.strictEqual(actualTokens.toString(), expectedTokens.add(expectedBonus).toString());
+      });
+
+      it('buyTokens should purchase tokens for less than presale min deposit in sale without bonus period', async () => {
+        const weiAmount = ether(0.01);
+        const expectedTokens = weiAmount.mul(rate);
+
         await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
-  
+
         await crowdsale.buyTokens({from: buyer, value: weiAmount});
         const actualTokens = await token.balanceOf(buyer);
         assert.strictEqual(actualTokens.toString(), expectedTokens.toString());
       });
 
-      it('buyTokens should purchase tokens if sold token amount == crowdsale cap', async () => {
-        const weiAmount = ether(3);
-        const crowdsaleCap = weiAmount.mul(rate);
-        const expectedTokens = crowdsaleCap;
-  
+      it('buyTokens should purchase tokens if wei amount == crowdsale cap in sale with bonus', async () => {
+        const weiAmount = ether(2);
+        const expectedTokens = weiAmount.mul(rate);
+        const expectedBonus = expectedTokens.div(bonusSaleDivisor);
+        const crowdsaleCap = expectedTokens.add(expectedBonus);
+        const presaleCap = ether(1.1).mul(rate);
+
         crowdsale = await ZxcCrowdsale.new(wallet,
                                            token.address,
                                            xcertToken.address,
@@ -744,7 +881,37 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                            startTimeSaleNoBonus,
                                            endTime,
                                            rate,
+                                           presaleCap,
                                            crowdsaleCap,
+                                           bonusPresale,
+                                           bonusSale,
+                                           minimumPresaleWeiDeposit,
+                                           {from: crowdsaleOwner});
+        // Set crowdsale contract ZXC allowance
+        await token.approve(crowdsale.address, crowdsaleCap, {from: tokenOwner});
+        await token.setCrowdsaleAddress(crowdsale.address, {from: tokenOwner});
+        await increaseTimeTo(startTimeSaleWithBonus + duration.seconds(30));
+
+        await crowdsale.buyTokens({from: buyer, value: weiAmount});
+        const actualTokens = await token.balanceOf(buyer);
+        assert.strictEqual(actualTokens.toString(), expectedTokens.add(expectedBonus).toString());
+      });
+
+      it('buyTokens should purchase tokens if wei amount == crowdsale cap in sale with no bonus', async () => {
+        const weiAmount = ether(3);
+        const crowdsaleCap = weiAmount.mul(rate);
+        const presaleCap = ether(0.1).mul(rate);
+        const expectedTokens = crowdsaleCap;
+
+        crowdsale = await ZxcCrowdsale.new(wallet,
+                                           token.address,
+                                           xcertToken.address,
+                                           startTimePresale,
+                                           startTimeSaleWithBonus,
+                                           startTimeSaleNoBonus,
+                                           endTime,
+                                           rate,
+                                           presaleCap,
                                            crowdsaleCap,
                                            bonusPresale,
                                            bonusSale,
@@ -754,16 +921,23 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
         await token.approve(crowdsale.address, crowdsaleCap, {from: tokenOwner});
         await token.setCrowdsaleAddress(crowdsale.address, {from: tokenOwner});
         await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
-  
+
         await crowdsale.buyTokens({from: buyer, value: weiAmount});
         const actualTokens = await token.balanceOf(buyer);
         assert.strictEqual(actualTokens.toString(), expectedTokens.toString());
       });
-  
-      it('buyTokens should fail purchasing if sold token amount goes over crowdsale cap', async () => {
-        const weiAmount = ether(3.1);
-        const crowdsaleCap = ether(3).mul(rate);
-  
+
+      it('buyTokens should purchase tokens if sold token amount == crowdsale cap in sale with bonus', async () => {
+        const weiAmount1 = ether(1.5);
+        const weiAmount2 = ether(2);
+        const expectedTokens1 = weiAmount1.mul(rate);
+        const expectedBonus1 = expectedTokens1.div(bonusSaleDivisor);
+        const expectedTokens2 = weiAmount2.mul(rate);
+        const expectedBonus2 = expectedTokens2.div(bonusSaleDivisor);
+
+        const presaleCap = ether(0.1).mul(rate);
+        const crowdsaleCap = expectedTokens1.add(expectedBonus1).add(expectedTokens2).add(expectedBonus2);
+
         crowdsale = await ZxcCrowdsale.new(wallet,
                                            token.address,
                                            xcertToken.address,
@@ -772,36 +946,271 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                                            startTimeSaleNoBonus,
                                            endTime,
                                            rate,
-                                           crowdsaleCap,
+                                           presaleCap,
                                            crowdsaleCap,
                                            bonusPresale,
                                            bonusSale,
                                            minimumPresaleWeiDeposit,
                                            {from: crowdsaleOwner});
-  
+        // Set crowdsale contract ZXC allowance
+        await token.approve(crowdsale.address, crowdsaleCap, {from: tokenOwner});
+        await token.setCrowdsaleAddress(crowdsale.address, {from: tokenOwner});
+        await increaseTimeTo(startTimeSaleWithBonus + duration.seconds(30));
+
+        await crowdsale.buyTokens({from: buyer, value: weiAmount1});
+        await crowdsale.buyTokens({from: buyerTwo, value: weiAmount2});
+        const actualTokens1 = await token.balanceOf(buyer);
+        const actualTokens2 = await token.balanceOf(buyerTwo);
+        assert.strictEqual(actualTokens1.add(actualTokens2).toString(),
+          expectedTokens1.add(expectedBonus1).add(expectedTokens2).add(expectedBonus2).toString());
+      });
+
+      it('buyTokens should purchase tokens if sold token amount == crowdsale cap in sale with no bonus', async () => {
+        const weiAmount1 = ether(2);
+        const weiAmount2 = ether(3);
+        const presaleCap = ether(0.1).mul(rate);
+        const crowdsaleCap = ether(5).mul(rate);
+        const expectedTokens = crowdsaleCap;
+
+        crowdsale = await ZxcCrowdsale.new(wallet,
+                                           token.address,
+                                           xcertToken.address,
+                                           startTimePresale,
+                                           startTimeSaleWithBonus,
+                                           startTimeSaleNoBonus,
+                                           endTime,
+                                           rate,
+                                           presaleCap,
+                                           crowdsaleCap,
+                                           bonusPresale,
+                                           bonusSale,
+                                           minimumPresaleWeiDeposit,
+                                           {from: crowdsaleOwner});
+        // Set crowdsale contract ZXC allowance
         await token.approve(crowdsale.address, crowdsaleCap, {from: tokenOwner});
         await token.setCrowdsaleAddress(crowdsale.address, {from: tokenOwner});
         await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
-  
+
+        await crowdsale.buyTokens({from: buyer, value: weiAmount1});
+        await crowdsale.buyTokens({from: buyerTwo, value: weiAmount2});
+        const actualTokens1 = await token.balanceOf(buyer);
+        const actualTokens2 = await token.balanceOf(buyerTwo);
+        assert.strictEqual(actualTokens1.add(actualTokens2).toString(), expectedTokens.toString());
+      });
+
+      it('buyTokens should fail if sold token amount > crowdsale cap in sale with bonus', async () => {
+        const weiAmount1 = ether(1.5);
+        const weiAmount2 = ether(2);
+        const expectedTokens1 = weiAmount1.mul(rate);
+        const expectedBonus1 = expectedTokens1.div(bonusSaleDivisor);
+        const expectedTokens2 = weiAmount2.mul(rate);
+        const expectedBonus2 = expectedTokens2.div(bonusSaleDivisor);
+
+        const presaleCap = ether(0.1).mul(rate);
+        const crowdsaleCap = expectedTokens1.add(expectedBonus1).add(expectedTokens2).add(expectedBonus2).sub(1);
+
+        crowdsale = await ZxcCrowdsale.new(wallet,
+                                           token.address,
+                                           xcertToken.address,
+                                           startTimePresale,
+                                           startTimeSaleWithBonus,
+                                           startTimeSaleNoBonus,
+                                           endTime,
+                                           rate,
+                                           presaleCap,
+                                           crowdsaleCap,
+                                           bonusPresale,
+                                           bonusSale,
+                                           minimumPresaleWeiDeposit,
+                                           {from: crowdsaleOwner});
+        // Set crowdsale contract ZXC allowance
+        await token.approve(crowdsale.address, crowdsaleCap, {from: tokenOwner});
+        await token.setCrowdsaleAddress(crowdsale.address, {from: tokenOwner});
+        await increaseTimeTo(startTimeSaleWithBonus + duration.seconds(30));
+
+        await crowdsale.buyTokens({from: buyer, value: weiAmount1});
+        await assertRevert(crowdsale.buyTokens({from: buyerTwo, value: weiAmount2}));
+
+        const actualTokens1 = await token.balanceOf(buyer);
+        assert.strictEqual(actualTokens1.toString(), expectedTokens1.add(expectedBonus1).toString());
+      });
+
+      it('buyTokens should fail if sold token amount > crowdsale cap in sale with no bonus', async () => {
+        const weiAmount1 = ether(1.5);
+        const weiAmount2 = ether(2);
+        const expectedTokens1 = weiAmount1.mul(rate);
+        const expectedTokens2 = weiAmount2.mul(rate);
+
+        const presaleCap = ether(0.1).mul(rate);
+        const crowdsaleCap = expectedTokens1.add(expectedTokens2).sub(1);
+
+        crowdsale = await ZxcCrowdsale.new(wallet,
+                                           token.address,
+                                           xcertToken.address,
+                                           startTimePresale,
+                                           startTimeSaleWithBonus,
+                                           startTimeSaleNoBonus,
+                                           endTime,
+                                           rate,
+                                           presaleCap,
+                                           crowdsaleCap,
+                                           bonusPresale,
+                                           bonusSale,
+                                           minimumPresaleWeiDeposit,
+                                           {from: crowdsaleOwner});
+        // Set crowdsale contract ZXC allowance
+        await token.approve(crowdsale.address, crowdsaleCap, {from: tokenOwner});
+        await token.setCrowdsaleAddress(crowdsale.address, {from: tokenOwner});
+        await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
+
+        await crowdsale.buyTokens({from: buyer, value: weiAmount1});
+        await assertRevert(crowdsale.buyTokens({from: buyerTwo, value: weiAmount2}));
+
+        const actualTokens1 = await token.balanceOf(buyer);
+        const actualTokens2 = await token.balanceOf(buyerTwo);
+        assert.strictEqual(actualTokens1.toString(), expectedTokens1.toString());
+        assert.strictEqual(actualTokens2.toString(), "0");
+      });
+
+      it('buyTokens should fail purchasing if wei amount goes over crowdsale cap in sale with bonus', async () => {
+        const weiAmount = ether(3);
+        const crowdsaleCap = ether(3).mul(rate);
+        const presaleCap = ether(0.1).mul(rate);
+
+        crowdsale = await ZxcCrowdsale.new(wallet,
+                                           token.address,
+                                           xcertToken.address,
+                                           startTimePresale,
+                                           startTimeSaleWithBonus,
+                                           startTimeSaleNoBonus,
+                                           endTime,
+                                           rate,
+                                           presaleCap,
+                                           crowdsaleCap,
+                                           bonusPresale,
+                                           bonusSale,
+                                           minimumPresaleWeiDeposit,
+                                           {from: crowdsaleOwner});
+
+        await token.approve(crowdsale.address, crowdsaleCap, {from: tokenOwner});
+        await token.setCrowdsaleAddress(crowdsale.address, {from: tokenOwner});
+        await increaseTimeTo(startTimeSaleWithBonus + duration.seconds(30));
+
         await assertRevert(crowdsale.buyTokens({from: buyer, value: weiAmount}));
       });
-  
+
+      it('buyTokens should fail purchasing if wei amount goes over crowdsale cap in sale with no bonus', async () => {
+        const weiAmount = ether(3.1);
+        const crowdsaleCap = ether(3).mul(rate);
+        const presaleCap = ether(0.1).mul(rate);
+
+        crowdsale = await ZxcCrowdsale.new(wallet,
+                                           token.address,
+                                           xcertToken.address,
+                                           startTimePresale,
+                                           startTimeSaleWithBonus,
+                                           startTimeSaleNoBonus,
+                                           endTime,
+                                           rate,
+                                           presaleCap,
+                                           crowdsaleCap,
+                                           bonusPresale,
+                                           bonusSale,
+                                           minimumPresaleWeiDeposit,
+                                           {from: crowdsaleOwner});
+
+        await token.approve(crowdsale.address, crowdsaleCap, {from: tokenOwner});
+        await token.setCrowdsaleAddress(crowdsale.address, {from: tokenOwner});
+        await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
+
+        await assertRevert(crowdsale.buyTokens({from: buyer, value: weiAmount}));
+      });
+
+      it('buyTokens should buy tokens multiple times from the same address in sale with bonus', async () => {
+        const weiAmount = ether(1.1);
+        const expectedTokens = weiAmount.mul(rate);
+        const expectedBonus = expectedTokens.div(bonusSaleDivisor);
+        const crowdsaleCap = ether(6).mul(rate);
+        const presaleCap = ether(0.1).mul(rate);
+
+        crowdsale = await ZxcCrowdsale.new(wallet,
+                                           token.address,
+                                           xcertToken.address,
+                                           startTimePresale,
+                                           startTimeSaleWithBonus,
+                                           startTimeSaleNoBonus,
+                                           endTime,
+                                           rate,
+                                           presaleCap,
+                                           crowdsaleCap,
+                                           bonusPresale,
+                                           bonusSale,
+                                           minimumPresaleWeiDeposit,
+                                           {from: crowdsaleOwner});
+
+        await token.approve(crowdsale.address, crowdsaleCap, {from: tokenOwner});
+        await token.setCrowdsaleAddress(crowdsale.address, {from: tokenOwner});
+        await increaseTimeTo(startTimeSaleWithBonus + duration.seconds(30));
+
+        await crowdsale.buyTokens({from: buyerTwo, value: weiAmount});
+        await crowdsale.buyTokens({from: buyerTwo, value: weiAmount});
+        await crowdsale.buyTokens({from: buyerTwo, value: weiAmount});
+
+        const actualTokens = await token.balanceOf(buyerTwo);
+
+        assert.strictEqual(actualTokens.toString(), expectedTokens.mul(3).add(expectedBonus.mul(3)).toString());
+      });
+
+      it('buyTokens should buy tokens multiple times from the same address in sale with no bonus', async () => {
+        const weiAmount = ether(1.1);
+        const crowdsaleCap = ether(5).mul(rate);
+        const presaleCap = ether(0.1).mul(rate);
+        const expectedTokens = weiAmount.mul(rate);
+
+        crowdsale = await ZxcCrowdsale.new(wallet,
+                                           token.address,
+                                           xcertToken.address,
+                                           startTimePresale,
+                                           startTimeSaleWithBonus,
+                                           startTimeSaleNoBonus,
+                                           endTime,
+                                           rate,
+                                           presaleCap,
+                                           crowdsaleCap,
+                                           bonusPresale,
+                                           bonusSale,
+                                           minimumPresaleWeiDeposit,
+                                           {from: crowdsaleOwner});
+
+        await token.approve(crowdsale.address, crowdsaleCap, {from: tokenOwner});
+        await token.setCrowdsaleAddress(crowdsale.address, {from: tokenOwner});
+        await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
+
+        await crowdsale.buyTokens({from: buyerTwo, value: weiAmount});
+        await crowdsale.buyTokens({from: buyerTwo, value: weiAmount});
+        await crowdsale.buyTokens({from: buyerTwo, value: weiAmount});
+
+        const actualTokens = await token.balanceOf(buyerTwo);
+
+        assert.strictEqual(actualTokens.toString(), expectedTokens.mul(3).toString());
+      });
+
       it('buyTokens should fail purchasing tokens if transferFrom fails', async () => {
         const weiAmount = ether(2.1);
-  
+
         await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
-  
+
         token.approve(crowdsale.address, 0, {from: tokenOwner});
         await assertRevert(crowdsale.buyTokens({from: buyer, value: weiAmount}));
       });
 
-      it('fallback function should purchase tokens', async () => {
+      it('fallback function should purchase tokens in sale with no bonus', async () => {
         const weiAmount = ether(8.05113);
         const expectedSoldTokens = weiAmount.mul(rate);
         const startWalletBalance = await web3.eth.getBalance(wallet);
-  
+
         await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
-  
+
         const { logs } = await crowdsale.sendTransaction({from: buyer, value: weiAmount});
         const actualBalance = await token.balanceOf(buyer);
         // Buyer should get correct number of tokens
@@ -812,7 +1221,30 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
         // Counter for sold ZXC should be increased
         const zxcSold = await crowdsale.zxcSold.call()
         assert.strictEqual(zxcSold.toString(), expectedSoldTokens.toString());
-  
+
+        const event = logs.find(e => e.event === 'TokenPurchase');
+        assert.notEqual(event, undefined);
+      });
+
+      it('fallback function should purchase tokens in sale with bonus', async () => {
+        const weiAmount = ether(4.21113);
+        const expectedSoldTokens = weiAmount.mul(rate);
+        const expectedBonus = expectedSoldTokens.div(bonusSaleDivisor);
+        const startWalletBalance = await web3.eth.getBalance(wallet);
+
+        await increaseTimeTo(startTimeSaleWithBonus + duration.seconds(30));
+
+        const { logs } = await crowdsale.sendTransaction({from: buyer, value: weiAmount});
+        const actualBalance = await token.balanceOf(buyer);
+        // Buyer should get correct number of tokens
+        assert.equal(actualBalance.toString(), expectedSoldTokens.add(expectedBonus).toString());
+        // Wallet should receive correct amount of wei
+        const endWalletBalance = await web3.eth.getBalance(wallet);
+        assert.strictEqual(endWalletBalance.sub(startWalletBalance).toString(), weiAmount.toString());
+        // Counter for sold ZXC should be increased
+        const zxcSold = await crowdsale.zxcSold.call()
+        assert.strictEqual(zxcSold.toString(), expectedSoldTokens.add(expectedBonus).toString());
+
         const event = logs.find(e => e.event === 'TokenPurchase');
         assert.notEqual(event, undefined);
       });
@@ -821,7 +1253,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
     describe('KYC level 1', function() {
       beforeEach(async () => {
         data = [web3Util.padLeft(web3Util.numberToHex(1), 64)];
-  
+
         await xcertToken.mint(buyer,
                               123,
                               "https://foobar.io",
@@ -829,6 +1261,115 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                               config,
                               data,
                               {from: xcertTokenOwner});
+
+        await xcertToken.mint(buyerTwo,
+                              124,
+                              "https://foobar2.io",
+                              "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e788",
+                              config,
+                              data,
+                              {from: xcertTokenOwner});
+      });
+
+      it('buyTokens should purchase tokens when in public sale with bonus - 2tx', async () => {
+        const weiAmount1 = ether("1.1234");
+        const expectedSoldTokens1 = weiAmount1.mul(rate);
+        const expectedBonus1 =  expectedSoldTokens1.div(bonusSaleDivisor);
+
+        const weiAmount2 = ether("5.1212");
+        const expectedSoldTokens2 = weiAmount2.mul(rate);
+        const expectedBonus2 =  expectedSoldTokens2.div(bonusSaleDivisor);
+
+        const startWalconstBalance = await web3.eth.getBalance(wallet);
+
+        await increaseTimeTo(startTimeSaleWithBonus + duration.seconds(30));
+
+        await crowdsale.buyTokens({from: buyer, value: weiAmount1});
+        await crowdsale.buyTokens({from: buyerTwo, value: weiAmount2});
+        const actualBalance1 = await token.balanceOf(buyer);
+        const actualBalance2 = await token.balanceOf(buyerTwo);
+        // Buyer should get correct number of tokens
+        assert.equal(actualBalance1.toString(), expectedSoldTokens1.add(expectedBonus1).toString());
+        assert.equal(actualBalance2.toString(), expectedSoldTokens2.add(expectedBonus2).toString());
+        // wallet should receive correct amount of wei
+        const endWalletBalance = await web3.eth.getBalance(wallet);
+        assert.strictEqual(endWalletBalance.sub(startWalconstBalance).toString(), weiAmount1.add(weiAmount2).toString());
+        // Counter for sold ZXC should be increased
+        const zxcSold = await crowdsale.zxcSold.call();
+        assert.strictEqual(zxcSold.toString(),
+          expectedSoldTokens1.add(expectedBonus1).add(expectedSoldTokens2).add(expectedBonus2).toString());
+      });
+
+      it('buyTokens should purchase tokens when in public sale with no bonus - 2tx', async () => {
+        const weiAmount1 = ether("1.1234");
+        const expectedSoldTokens1 = weiAmount1.mul(rate);
+
+        const weiAmount2 = ether("4.1212");
+        const expectedSoldTokens2 = weiAmount2.mul(rate);
+
+        const startWalconstBalance = await web3.eth.getBalance(wallet);
+
+        await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
+
+        await crowdsale.buyTokens({from: buyer, value: weiAmount1});
+        await crowdsale.buyTokens({from: buyerTwo, value: weiAmount2});
+        const actualBalance1 = await token.balanceOf(buyer);
+        const actualBalance2 = await token.balanceOf(buyerTwo);
+        // Buyer should get correct number of tokens
+        assert.equal(actualBalance1.toString(), expectedSoldTokens1.toString());
+        assert.equal(actualBalance2.toString(), expectedSoldTokens2.toString());
+        // wallet should receive correct amount of wei
+        const endWalletBalance = await web3.eth.getBalance(wallet);
+        assert.strictEqual(endWalletBalance.sub(startWalconstBalance).toString(), weiAmount1.add(weiAmount2).toString());
+        // Counter for sold ZXC should be increased
+        const zxcSold = await crowdsale.zxcSold.call();
+        assert.strictEqual(zxcSold.toString(),
+          expectedSoldTokens1.add(expectedSoldTokens2).toString());
+      });
+
+      it('fallback function should purchase tokens in sale with no bonus', async () => {
+        const weiAmount = ether(4.21113);
+        const expectedSoldTokens = weiAmount.mul(rate);
+        const startWalletBalance = await web3.eth.getBalance(wallet);
+
+        await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
+
+        const { logs } = await crowdsale.sendTransaction({from: buyerTwo, value: weiAmount});
+        const actualBalance = await token.balanceOf(buyerTwo);
+        // Buyer should get correct number of tokens
+        assert.equal(actualBalance.toString(), expectedSoldTokens.toString());
+        // Wallet should receive correct amount of wei
+        const endWalletBalance = await web3.eth.getBalance(wallet);
+        assert.strictEqual(endWalletBalance.sub(startWalletBalance).toString(), weiAmount.toString());
+        // Counter for sold ZXC should be increased
+        const zxcSold = await crowdsale.zxcSold.call()
+        assert.strictEqual(zxcSold.toString(), expectedSoldTokens.toString());
+
+        const event = logs.find(e => e.event === 'TokenPurchase');
+        assert.notEqual(event, undefined);
+      });
+
+      it('fallback function should purchase tokens in sale with bonus', async () => {
+        const weiAmount = ether(4.21113);
+        const expectedSoldTokens = weiAmount.mul(rate);
+        const expectedBonus = expectedSoldTokens.div(bonusSaleDivisor);
+        const startWalletBalance = await web3.eth.getBalance(wallet);
+
+        await increaseTimeTo(startTimeSaleWithBonus + duration.seconds(30));
+
+        const { logs } = await crowdsale.sendTransaction({from: buyerTwo, value: weiAmount});
+        const actualBalance = await token.balanceOf(buyerTwo);
+        // Buyer should get correct number of tokens
+        assert.equal(actualBalance.toString(), expectedSoldTokens.add(expectedBonus).toString());
+        // Wallet should receive correct amount of wei
+        const endWalletBalance = await web3.eth.getBalance(wallet);
+        assert.strictEqual(endWalletBalance.sub(startWalletBalance).toString(), weiAmount.toString());
+        // Counter for sold ZXC should be increased
+        const zxcSold = await crowdsale.zxcSold.call()
+        assert.strictEqual(zxcSold.toString(), expectedSoldTokens.add(expectedBonus).toString());
+
+        const event = logs.find(e => e.event === 'TokenPurchase');
+        assert.notEqual(event, undefined);
       });
 
       it('buyTokens should fail in presale', async () => {
@@ -836,7 +1377,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
         await increaseTimeTo(startTimePresale + duration.seconds(30));
         await assertRevert(crowdsale.buyTokens({from: buyer, value: weiAmount}));
       });
-  
+
       it('buyTokens should purchase tokens in presale if another kyc level 2 token is minted after level 1 token', async () => {
         const weiAmount = ether(1);
         const expectedTokens = weiAmount.mul(rate);
@@ -850,7 +1391,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                               config,
                               data,
                               {from: xcertTokenOwner});
-       
+
         await increaseTimeTo(startTimePresale + duration.seconds(30));
         await crowdsale.buyTokens({from: buyer, value: weiAmount});
         const actualTokens = await token.balanceOf(buyer);
@@ -861,49 +1402,376 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
         const weiAmount = ether(0.01);
         const expectedTokens = weiAmount.mul(rate);
         const expectedBonus =  expectedTokens.div(bonusSaleDivisor);
-        data = [web3Util.padLeft(web3Util.numberToHex(1), 64)];
         await increaseTimeTo(startTimeSaleWithBonus + duration.seconds(30));
         await crowdsale.buyTokens({from: buyer, value: weiAmount});
         const actualTokens = await token.balanceOf(buyer);
         assert.strictEqual(actualTokens.toString(), expectedTokens.add(expectedBonus).toString());
       });
-  
+
       it('buyTokens should purchase tokens in crowdsale with no bonus', async () => {
         const weiAmount = ether(0.01);
         const expectedTokens = weiAmount.mul(rate);
-        data = [web3Util.padLeft(web3Util.numberToHex(1), 64)];
         await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
         await crowdsale.buyTokens({from: buyer, value: weiAmount});
         const actualTokens = await token.balanceOf(buyer);
         assert.strictEqual(actualTokens.toString(), expectedTokens.toString());
+      });
+
+      it('buyTokens should purchase tokens if wei amount == crowdsale cap in sale with bonus', async () => {
+        const weiAmount = ether(2);
+        const expectedTokens = weiAmount.mul(rate);
+        const expectedBonus = expectedTokens.div(bonusSaleDivisor);
+        const crowdsaleCap = expectedTokens.add(expectedBonus);
+        const presaleCap = ether(1.1).mul(rate);
+
+        crowdsale = await ZxcCrowdsale.new(wallet,
+                                           token.address,
+                                           xcertToken.address,
+                                           startTimePresale,
+                                           startTimeSaleWithBonus,
+                                           startTimeSaleNoBonus,
+                                           endTime,
+                                           rate,
+                                           presaleCap,
+                                           crowdsaleCap,
+                                           bonusPresale,
+                                           bonusSale,
+                                           minimumPresaleWeiDeposit,
+                                           {from: crowdsaleOwner});
+        // Set crowdsale contract ZXC allowance
+        await token.approve(crowdsale.address, crowdsaleCap, {from: tokenOwner});
+        await token.setCrowdsaleAddress(crowdsale.address, {from: tokenOwner});
+        await increaseTimeTo(startTimeSaleWithBonus + duration.seconds(30));
+
+        await crowdsale.buyTokens({from: buyer, value: weiAmount});
+        const actualTokens = await token.balanceOf(buyer);
+        assert.strictEqual(actualTokens.toString(), expectedTokens.add(expectedBonus).toString());
+      });
+
+      it('buyTokens should purchase tokens if wei amount == crowdsale cap in sale with no bonus', async () => {
+        const weiAmount = ether(3);
+        const crowdsaleCap = weiAmount.mul(rate);
+        const presaleCap = ether(0.1).mul(rate);
+        const expectedTokens = crowdsaleCap;
+
+        crowdsale = await ZxcCrowdsale.new(wallet,
+                                           token.address,
+                                           xcertToken.address,
+                                           startTimePresale,
+                                           startTimeSaleWithBonus,
+                                           startTimeSaleNoBonus,
+                                           endTime,
+                                           rate,
+                                           presaleCap,
+                                           crowdsaleCap,
+                                           bonusPresale,
+                                           bonusSale,
+                                           minimumPresaleWeiDeposit,
+                                           {from: crowdsaleOwner});
+        // Set crowdsale contract ZXC allowance
+        await token.approve(crowdsale.address, crowdsaleCap, {from: tokenOwner});
+        await token.setCrowdsaleAddress(crowdsale.address, {from: tokenOwner});
+        await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
+
+        await crowdsale.buyTokens({from: buyer, value: weiAmount});
+        const actualTokens = await token.balanceOf(buyer);
+        assert.strictEqual(actualTokens.toString(), expectedTokens.toString());
+      });
+
+      it('buyTokens should purchase tokens if sold token amount == crowdsale cap in sale with bonus', async () => {
+        const weiAmount1 = ether(1.5);
+        const weiAmount2 = ether(2);
+        const expectedTokens1 = weiAmount1.mul(rate);
+        const expectedBonus1 = expectedTokens1.div(bonusSaleDivisor);
+        const expectedTokens2 = weiAmount2.mul(rate);
+        const expectedBonus2 = expectedTokens2.div(bonusSaleDivisor);
+
+        const presaleCap = ether(0.1).mul(rate);
+        const crowdsaleCap = expectedTokens1.add(expectedBonus1).add(expectedTokens2).add(expectedBonus2);
+
+        crowdsale = await ZxcCrowdsale.new(wallet,
+                                           token.address,
+                                           xcertToken.address,
+                                           startTimePresale,
+                                           startTimeSaleWithBonus,
+                                           startTimeSaleNoBonus,
+                                           endTime,
+                                           rate,
+                                           presaleCap,
+                                           crowdsaleCap,
+                                           bonusPresale,
+                                           bonusSale,
+                                           minimumPresaleWeiDeposit,
+                                           {from: crowdsaleOwner});
+        // Set crowdsale contract ZXC allowance
+        await token.approve(crowdsale.address, crowdsaleCap, {from: tokenOwner});
+        await token.setCrowdsaleAddress(crowdsale.address, {from: tokenOwner});
+        await increaseTimeTo(startTimeSaleWithBonus + duration.seconds(30));
+
+        await crowdsale.buyTokens({from: buyer, value: weiAmount1});
+        await crowdsale.buyTokens({from: buyerTwo, value: weiAmount2});
+        const actualTokens1 = await token.balanceOf(buyer);
+        const actualTokens2 = await token.balanceOf(buyerTwo);
+        assert.strictEqual(actualTokens1.add(actualTokens2).toString(),
+          expectedTokens1.add(expectedBonus1).add(expectedTokens2).add(expectedBonus2).toString());
+      });
+
+      it('buyTokens should purchase tokens if sold token amount == crowdsale cap in sale with no bonus', async () => {
+        const weiAmount1 = ether(2);
+        const weiAmount2 = ether(3);
+        const presaleCap = ether(0.1).mul(rate);
+        const crowdsaleCap = ether(5).mul(rate);
+        const expectedTokens = crowdsaleCap;
+
+        crowdsale = await ZxcCrowdsale.new(wallet,
+                                           token.address,
+                                           xcertToken.address,
+                                           startTimePresale,
+                                           startTimeSaleWithBonus,
+                                           startTimeSaleNoBonus,
+                                           endTime,
+                                           rate,
+                                           presaleCap,
+                                           crowdsaleCap,
+                                           bonusPresale,
+                                           bonusSale,
+                                           minimumPresaleWeiDeposit,
+                                           {from: crowdsaleOwner});
+        // Set crowdsale contract ZXC allowance
+        await token.approve(crowdsale.address, crowdsaleCap, {from: tokenOwner});
+        await token.setCrowdsaleAddress(crowdsale.address, {from: tokenOwner});
+        await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
+
+        await crowdsale.buyTokens({from: buyer, value: weiAmount1});
+        await crowdsale.buyTokens({from: buyerTwo, value: weiAmount2});
+        const actualTokens1 = await token.balanceOf(buyer);
+        const actualTokens2 = await token.balanceOf(buyerTwo);
+        assert.strictEqual(actualTokens1.add(actualTokens2).toString(), expectedTokens.toString());
+      });
+
+      it('buyTokens should fail if sold token amount > crowdsale cap in sale with bonus', async () => {
+        const weiAmount1 = ether(1.5);
+        const weiAmount2 = ether(2);
+        const expectedTokens1 = weiAmount1.mul(rate);
+        const expectedBonus1 = expectedTokens1.div(bonusSaleDivisor);
+        const expectedTokens2 = weiAmount2.mul(rate);
+        const expectedBonus2 = expectedTokens2.div(bonusSaleDivisor);
+
+        const presaleCap = ether(0.1).mul(rate);
+        const crowdsaleCap = expectedTokens1.add(expectedBonus1).add(expectedTokens2).add(expectedBonus2).sub(1);
+
+        crowdsale = await ZxcCrowdsale.new(wallet,
+                                           token.address,
+                                           xcertToken.address,
+                                           startTimePresale,
+                                           startTimeSaleWithBonus,
+                                           startTimeSaleNoBonus,
+                                           endTime,
+                                           rate,
+                                           presaleCap,
+                                           crowdsaleCap,
+                                           bonusPresale,
+                                           bonusSale,
+                                           minimumPresaleWeiDeposit,
+                                           {from: crowdsaleOwner});
+        // Set crowdsale contract ZXC allowance
+        await token.approve(crowdsale.address, crowdsaleCap, {from: tokenOwner});
+        await token.setCrowdsaleAddress(crowdsale.address, {from: tokenOwner});
+        await increaseTimeTo(startTimeSaleWithBonus + duration.seconds(30));
+
+        await crowdsale.buyTokens({from: buyer, value: weiAmount1});
+        await assertRevert(crowdsale.buyTokens({from: buyerTwo, value: weiAmount2}));
+
+        const actualTokens1 = await token.balanceOf(buyer);
+        assert.strictEqual(actualTokens1.toString(), expectedTokens1.add(expectedBonus1).toString());
+      });
+
+      it('buyTokens should fail if sold token amount > crowdsale cap in sale with no bonus', async () => {
+        const weiAmount1 = ether(1.5);
+        const weiAmount2 = ether(2);
+        const expectedTokens1 = weiAmount1.mul(rate);
+        const expectedTokens2 = weiAmount2.mul(rate);
+
+        const presaleCap = ether(0.1).mul(rate);
+        const crowdsaleCap = expectedTokens1.add(expectedTokens2).sub(1);
+
+        crowdsale = await ZxcCrowdsale.new(wallet,
+                                           token.address,
+                                           xcertToken.address,
+                                           startTimePresale,
+                                           startTimeSaleWithBonus,
+                                           startTimeSaleNoBonus,
+                                           endTime,
+                                           rate,
+                                           presaleCap,
+                                           crowdsaleCap,
+                                           bonusPresale,
+                                           bonusSale,
+                                           minimumPresaleWeiDeposit,
+                                           {from: crowdsaleOwner});
+        // Set crowdsale contract ZXC allowance
+        await token.approve(crowdsale.address, crowdsaleCap, {from: tokenOwner});
+        await token.setCrowdsaleAddress(crowdsale.address, {from: tokenOwner});
+        await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
+
+        await crowdsale.buyTokens({from: buyer, value: weiAmount1});
+        await assertRevert(crowdsale.buyTokens({from: buyerTwo, value: weiAmount2}));
+
+        const actualTokens1 = await token.balanceOf(buyer);
+        const actualTokens2 = await token.balanceOf(buyerTwo);
+        assert.strictEqual(actualTokens1.toString(), expectedTokens1.toString());
+        assert.strictEqual(actualTokens2.toString(), "0");
+      });
+
+      it('buyTokens should fail purchasing if wei amount goes over crowdsale cap in sale with bonus', async () => {
+        const weiAmount = ether(3);
+        const crowdsaleCap = ether(3).mul(rate);
+        const presaleCap = ether(0.1).mul(rate);
+
+        crowdsale = await ZxcCrowdsale.new(wallet,
+                                           token.address,
+                                           xcertToken.address,
+                                           startTimePresale,
+                                           startTimeSaleWithBonus,
+                                           startTimeSaleNoBonus,
+                                           endTime,
+                                           rate,
+                                           presaleCap,
+                                           crowdsaleCap,
+                                           bonusPresale,
+                                           bonusSale,
+                                           minimumPresaleWeiDeposit,
+                                           {from: crowdsaleOwner});
+
+        await token.approve(crowdsale.address, crowdsaleCap, {from: tokenOwner});
+        await token.setCrowdsaleAddress(crowdsale.address, {from: tokenOwner});
+        await increaseTimeTo(startTimeSaleWithBonus + duration.seconds(30));
+
+        await assertRevert(crowdsale.buyTokens({from: buyer, value: weiAmount}));
+      });
+
+      it('buyTokens should fail purchasing if wei amount goes over crowdsale cap in sale with no bonus', async () => {
+        const weiAmount = ether(3.1);
+        const crowdsaleCap = ether(3).mul(rate);
+        const presaleCap = ether(0.1).mul(rate);
+
+        crowdsale = await ZxcCrowdsale.new(wallet,
+                                           token.address,
+                                           xcertToken.address,
+                                           startTimePresale,
+                                           startTimeSaleWithBonus,
+                                           startTimeSaleNoBonus,
+                                           endTime,
+                                           rate,
+                                           presaleCap,
+                                           crowdsaleCap,
+                                           bonusPresale,
+                                           bonusSale,
+                                           minimumPresaleWeiDeposit,
+                                           {from: crowdsaleOwner});
+
+        await token.approve(crowdsale.address, crowdsaleCap, {from: tokenOwner});
+        await token.setCrowdsaleAddress(crowdsale.address, {from: tokenOwner});
+        await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
+
+        await assertRevert(crowdsale.buyTokens({from: buyer, value: weiAmount}));
+      });
+
+      it('buyTokens should buy tokens multiple times from the same address in sale with no bonus', async () => {
+        const weiAmount = ether(1.1);
+        const crowdsaleCap = ether(5).mul(rate);
+        const presaleCap = ether(0.1).mul(rate);
+        const expectedTokens = weiAmount.mul(rate);
+
+        crowdsale = await ZxcCrowdsale.new(wallet,
+                                           token.address,
+                                           xcertToken.address,
+                                           startTimePresale,
+                                           startTimeSaleWithBonus,
+                                           startTimeSaleNoBonus,
+                                           endTime,
+                                           rate,
+                                           presaleCap,
+                                           crowdsaleCap,
+                                           bonusPresale,
+                                           bonusSale,
+                                           minimumPresaleWeiDeposit,
+                                           {from: crowdsaleOwner});
+
+        await token.approve(crowdsale.address, crowdsaleCap, {from: tokenOwner});
+        await token.setCrowdsaleAddress(crowdsale.address, {from: tokenOwner});
+        await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
+
+        await crowdsale.buyTokens({from: buyer, value: weiAmount});
+        await crowdsale.buyTokens({from: buyer, value: weiAmount});
+        await crowdsale.buyTokens({from: buyer, value: weiAmount});
+
+        const actualTokens = await token.balanceOf(buyer);
+
+        assert.strictEqual(actualTokens.toString(), expectedTokens.mul(3).toString());
+      });
+
+      it('buyTokens should buy tokens multiple times from the same address in sale with bonus', async () => {
+        const weiAmount = ether(1.1);
+        const expectedTokens = weiAmount.mul(rate);
+        const expectedBonus = expectedTokens.div(bonusSaleDivisor);
+        const crowdsaleCap = ether(6).mul(rate);
+        const presaleCap = ether(0.1).mul(rate);
+
+        crowdsale = await ZxcCrowdsale.new(wallet,
+                                           token.address,
+                                           xcertToken.address,
+                                           startTimePresale,
+                                           startTimeSaleWithBonus,
+                                           startTimeSaleNoBonus,
+                                           endTime,
+                                           rate,
+                                           presaleCap,
+                                           crowdsaleCap,
+                                           bonusPresale,
+                                           bonusSale,
+                                           minimumPresaleWeiDeposit,
+                                           {from: crowdsaleOwner});
+
+        await token.approve(crowdsale.address, crowdsaleCap, {from: tokenOwner});
+        await token.setCrowdsaleAddress(crowdsale.address, {from: tokenOwner});
+        await increaseTimeTo(startTimeSaleWithBonus + duration.seconds(30));
+
+        await crowdsale.buyTokens({from: buyer, value: weiAmount});
+        await crowdsale.buyTokens({from: buyer, value: weiAmount});
+        await crowdsale.buyTokens({from: buyer, value: weiAmount});
+
+        const actualTokens = await token.balanceOf(buyer);
+
+        assert.strictEqual(actualTokens.toString(), expectedTokens.mul(3).add(expectedBonus.mul(3)).toString());
       });
     });
 
     describe('no KYC', function() {
       it('buyTokens should fail in presale', async () => {
         const weiAmount = ether(2.1);
-  
+
         await increaseTimeTo(startTimePresale + duration.seconds(30));
         await assertRevert(crowdsale.buyTokens({from: buyer, value: weiAmount}));
       });
 
       it('buyTokens should fail in crowdsale with bonus', async () => {
         const weiAmount = ether(2.1);
-  
+
         await increaseTimeTo(startTimeSaleWithBonus + duration.seconds(30));
         await assertRevert(crowdsale.buyTokens({from: buyer, value: weiAmount}));
       });
 
       it('buyTokens should fail in crowdsale with no bonus', async () => {
         const weiAmount = ether(2.1);
-  
+
         await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
         await assertRevert(crowdsale.buyTokens({from: buyer, value: weiAmount}));
       });
-  
+
       it('fallback function should fail', async () => {
         const weiAmount = ether(2.1);
-  
+
         await increaseTimeTo(startTimeSaleNoBonus + duration.seconds(30));
         await assertRevert(crowdsale.sendTransaction({from: buyer, value: weiAmount}));
       });
