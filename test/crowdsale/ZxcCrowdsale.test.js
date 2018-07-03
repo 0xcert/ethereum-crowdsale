@@ -38,6 +38,7 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
   const tokenOwner = accounts[2];
   const wallet = accounts[3];
   const buyer = accounts[4];
+  const buyerTwo = accounts[8];
   const _tester = accounts[6];  // tester should never be the default account!
   const xcertTokenOwner = accounts[7];
 
@@ -593,6 +594,13 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
                               config,
                               data,
                               {from: xcertTokenOwner});
+        await xcertToken.mint(buyerTwo,
+                              124,
+                              "https://foobar2.io",
+                              "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e711",
+                              config,
+                              data,
+                              {from: xcertTokenOwner});
       });
 
       it('buyTokens should purchase tokens when in public presale', async () => {
@@ -617,9 +625,68 @@ contract('crowdsale/ZxcCrowdsale', (accounts) => {
         const event = logs.find(e => e.event === 'TokenPurchase');
         assert.notEqual(event, undefined);
       });
-  
+
       it('buyTokens should revert purchase tokens when in public presale and cap reached', async () => {
-        const weiAmount = ether("11.1");
+        const weiAmount1 = ether("2.0");
+        const weiAmount2 = ether("2.0");
+        const presaleCap = new BigNumber("4.4").mul(decimalsMul).mul(rate);
+        crowdsale = await ZxcCrowdsale.new(wallet,
+                                           token.address,
+                                           xcertToken.address,
+                                           startTimePresale,
+                                           startTimeSaleWithBonus,
+                                           startTimeSaleNoBonus,
+                                           endTime,
+                                           rate,
+                                           presaleCap,
+                                           crowdSaleZxcSupply,
+                                           bonusPresale,
+                                           bonusSale,
+                                           minimumPresaleWeiDeposit,
+                                           {from: crowdsaleOwner});
+
+        // Set crowdsale contract ZXC allowance
+        await token.approve(crowdsale.address, crowdSaleZxcSupply, {from: tokenOwner});
+        await token.setCrowdsaleAddress(crowdsale.address, {from: tokenOwner});
+        await increaseTimeTo(startTimePresale + duration.seconds(30));
+
+        await crowdsale.buyTokens({from: buyer, value: weiAmount1});
+        await crowdsale.buyTokens({from: buyerTwo, value: weiAmount2});
+        // Cap reached, next transaction should fail.
+        await assertRevert(crowdsale.buyTokens({from: buyerTwo, value: weiAmount2}));
+      });
+
+      it('buyTokens should revert purchase tokens when in public presale and over cap', async () => {
+        const weiAmount1 = ether("8.1");
+        const weiAmount2 = ether("3.2");
+        const presaleCap = new BigNumber("10").mul(decimalsMul).mul(rate);
+        crowdsale = await ZxcCrowdsale.new(wallet,
+                                           token.address,
+                                           xcertToken.address,
+                                           startTimePresale,
+                                           startTimeSaleWithBonus,
+                                           startTimeSaleNoBonus,
+                                           endTime,
+                                           rate,
+                                           presaleCap,
+                                           crowdSaleZxcSupply,
+                                           bonusPresale,
+                                           bonusSale,
+                                           minimumPresaleWeiDeposit,
+                                           {from: crowdsaleOwner});
+
+        // Set crowdsale contract ZXC allowance
+        await token.approve(crowdsale.address, crowdSaleZxcSupply, {from: tokenOwner});
+        await token.setCrowdsaleAddress(crowdsale.address, {from: tokenOwner});
+        await increaseTimeTo(startTimePresale + duration.seconds(30));
+
+        await crowdsale.buyTokens({from: buyer, value: weiAmount1});
+        // Next transaction has amount that goes over the cap so we should revert.
+        await assertRevert(crowdsale.buyTokens({from: buyerTwo, value: weiAmount2}));
+      });
+
+      it('buyTokens should revert purchase tokens when in public presale amount > cap', async () => {
+        const weiAmount = ether("10.1");
         const presaleCap = new BigNumber("10").mul(decimalsMul).mul(rate);
         crowdsale = await ZxcCrowdsale.new(wallet,
                                            token.address,

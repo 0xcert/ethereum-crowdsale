@@ -209,7 +209,7 @@ contract ZxcCrowdsale
       require(kycLevel > 1);
       require(msg.value >= minimumPresaleWeiDeposit);
       tokens = getTokenAmount(msg.value, bonusPresale);
-      require(tokens <= preSaleZxcCap);
+      require(zxcSold.add(tokens) <= preSaleZxcCap);
     }
     else if (isInTimeRange(startTimeSaleWithBonus, startTimeSaleNoBonus)) {
       tokens = getTokenAmount(msg.value, bonusSale);
